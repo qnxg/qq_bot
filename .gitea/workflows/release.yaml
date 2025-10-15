@@ -1,0 +1,50 @@
+on:
+  release:
+    types: [published]
+
+jobs:
+  upload-assets:
+    env:
+      RUNNER_TOOL_CACHE: /toolcache
+    runs-on: ubuntu-22.04
+    steps:
+      - uses: https://gitee.com/skr2005/checkout@v5
+
+      - name: Setup Toolchain
+        uses: ./.gitea/workflows/setup-toolchain
+
+      - name: Build
+        run: |
+          cargo build --release --target x86_64-unknown-linux-musl
+      
+      - name: Login to Docker Registry
+        uses: https://gitee.com/greyCloud/login-action@v3
+        with:
+          registry: ${{ vars.DOCKER_SERVER_CAIWEN }}
+          username: ${{ secrets.DOCKER_USERNAME_CAIWEN }}
+          password: ${{ secrets.DOCKER_PASSWORD_CAIWEN }}
+
+      - name: Build and Push Docker Image
+        uses: https://gitee.com/greyCloud/build-push-action@v5
+        with:
+          context: .
+          file: Dockerfile
+          push: true
+          tags: ${{ vars.DOCKER_SERVER_CAIWEN }}/qnxg_qq_bot:latest
+
+      - name: Setup SSH
+        uses: https://gitee.com/greyCloud/ssh-key-action.git@v2
+        with:
+          key: ${{ secrets.SSH_KEY_119 }}
+          known_hosts: unnecessary
+      - name: Deploy
+        run: |
+          ssh -o StrictHostKeyChecking=no ${{ secrets.SSH_USERNAME_119 }}@${{ secrets.SSH_SERVER_119 }} << 'EOF'
+          cd ${{ vars.DEPLOY_DIR }}
+          docker-compose down
+          docker-compose pull
+          docker-compose up -d
+          docker container prune -f
+          docker rmi -f $(docker images | grep '<none>' | awk '{print $3}')
+          docker image prune -a -f
+          EOF
