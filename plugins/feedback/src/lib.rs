@@ -36,7 +36,10 @@ async fn main() {
             for item in event.message.iter() {
                 match item.type_.as_str() {
                     "reply" => {
-                        target = item.data["id"].as_i64();
+                        target = item.data["id"]
+                            .as_str()
+                            .map(|s| s.parse::<i64>().ok())
+                            .flatten();
                         body.push(' ');
                     }
                     "at" => {
