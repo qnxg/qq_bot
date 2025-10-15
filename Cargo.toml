@@ -3,6 +3,9 @@ name = "bot-helper"
 version = "0.1.0"
 edition = "2024"
 
+[target.'cfg(not(windows))'.dependencies]
+openssl = { version = "0.10", features = ["vendored"] }
+
 [dependencies]
 anyhow = "1.0.100"
 feedback = { version = "0.1.0", path = "plugins/feedback" }
