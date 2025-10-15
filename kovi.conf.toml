@@ -1,0 +1,10 @@
+[config]
+main_admin = 3102733279
+admins = []
+debug = false
+
+[server]
+host = "IP地址"                     # napcat 的地址，napcat 需要设置一个 websocket 服务器
+port = 3003                       # 端口号
+access_token = "..lH|{5)a0X*?moD" # napcat 的 access_token
+secure = false

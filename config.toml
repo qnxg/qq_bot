@@ -1,0 +1,15 @@
+[rabbitmq]
+url = "amqp://用户名:密码@ip地址:端口/VirtualHost" # VirtualHost 需要 URL 编码，如 / 编码为 %2F
+feedback_queue = "feedback.qqrobot"       # 在哪个队列上接收反馈消息
+
+[database]
+max_connections = 100
+database_url = "mysql://用户名:密码@ip地址:端口/数据库表名" # 数据库需要和后端使用的保持一致
+
+[feedback]
+admin_qq = ["3102733279"] # 管理员 QQ 号列表
+group_id = "1065050378"   # 机器人响应哪个群
+
+[yqwork]
+token = ""                                   # 工作台的 token。登陆工作台后，HTTP 请求头中的 Authorization 字段（token 一般有效期是一天）
+url = "https://qnxg.cn/api/yqwork-node-2023" # 末尾不用添加 /
