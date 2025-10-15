@@ -71,7 +71,7 @@ impl CommandHandler for FeedbackConfirmCommand {
     }
 
     fn command_usage(&self) -> &'static str {
-        "确认 <问题 id> <...回复内容>/#<快捷回复id>： 标记问题为已确认并回复"
+        "确认 <问题 id> [...回复内容]/#[快捷回复id]： 标记问题为已确认并回复"
     }
 
     async fn handle_command<'a>(&self, mut ctx: CommandContext<'a>) -> Result<Option<Message>> {
@@ -79,15 +79,13 @@ impl CommandHandler for FeedbackConfirmCommand {
             Some(id) => id,
             None => return Ok(Some(Message::new().add_text(self.command_usage()))),
         };
-        let reply_content = match ctx.get_content_or_fast_reply().await? {
-            Some(content) => content,
-            None => return Ok(Some(Message::new().add_text(self.command_usage()))),
-        };
-        if let Some(_) = database::get_feedback_detail(feedback_id).await? {
+        let reply_content = ctx.get_content_or_fast_reply().await?;
+        if let Some(feedback) = database::get_feedback_detail(feedback_id).await? {
             api::update_feedback(
                 feedback_id,
-                Some(FeedbackStatus::Confirmed),
-                Some(&reply_content),
+                FeedbackStatus::Confirmed,
+                reply_content,
+                feedback.stu_id,
             )
             .await?;
             if let Some(feedback) = database::get_feedback_detail(feedback_id).await? {
@@ -113,7 +111,7 @@ impl CommandHandler for FeedbackResolveCommand {
     }
 
     fn command_usage(&self) -> &'static str {
-        "解决 <问题 id> <...回复内容>/#<快捷回复id>： 标记问题为已解决并回复"
+        "解决 <问题 id> [...回复内容]/#[快捷回复id]： 标记问题为已解决并回复"
     }
 
     async fn handle_command<'a>(&self, mut ctx: CommandContext<'a>) -> Result<Option<Message>> {
@@ -121,15 +119,13 @@ impl CommandHandler for FeedbackResolveCommand {
             Some(id) => id,
             None => return Ok(Some(Message::new().add_text(self.command_usage()))),
         };
-        let reply_content = match ctx.get_content_or_fast_reply().await? {
-            Some(content) => content,
-            None => return Ok(Some(Message::new().add_text(self.command_usage()))),
-        };
-        if let Some(_) = database::get_feedback_detail(feedback_id).await? {
+        let reply_content = ctx.get_content_or_fast_reply().await?;
+        if let Some(feedback) = database::get_feedback_detail(feedback_id).await? {
             api::update_feedback(
                 feedback_id,
-                Some(FeedbackStatus::Resolved),
-                Some(&reply_content),
+                FeedbackStatus::Resolved,
+                reply_content,
+                feedback.stu_id,
             )
             .await?;
             if let Some(feedback) = database::get_feedback_detail(feedback_id).await? {

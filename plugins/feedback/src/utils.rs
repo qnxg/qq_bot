@@ -34,3 +34,11 @@ pub fn format_feedback_detail(feedback: &FeedbackDetail) -> String {
         }
     )
 }
+
+/// %Y-%m-%d %H:%M:%S，时区为 UTC+8
+pub fn get_now_time() -> String {
+    let utc_now = chrono::Utc::now();
+    let utc_plus_8 = chrono::FixedOffset::east_opt(8 * 3600).unwrap();
+    let now = utc_now.with_timezone(&utc_plus_8);
+    now.format("%Y-%m-%d %H:%M:%S").to_string()
+}
