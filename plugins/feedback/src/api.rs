@@ -9,6 +9,7 @@ use crate::{config::CFG, entities::FeedbackStatus, utils};
 pub static CLIENT: Lazy<Client> = Lazy::new(|| {
     Client::builder()
         .connection_verbose(false)
+        .danger_accept_invalid_certs(true)
         .timeout(Duration::from_secs(6))
         .default_headers({
             let mut headers = HeaderMap::new();
