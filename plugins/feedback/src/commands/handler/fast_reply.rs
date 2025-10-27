@@ -85,3 +85,30 @@ impl CommandHandler for FastReplyDeleteCommand {
         Ok(Some(Message::new().add_text("快捷回复已删除。")))
     }
 }
+
+pub struct FastReplyDetailCommand;
+#[async_trait]
+impl CommandHandler for FastReplyDetailCommand {
+    fn command_name(&self) -> &'static str {
+        "回复详情"
+    }
+
+    fn command_usage(&self) -> &'static str {
+        "回复详情 #<快捷回复id>：查看快捷回复详情"
+    }
+
+    async fn handle_command<'a>(&self, mut ctx: CommandContext<'a>) -> Result<Option<Message>> {
+        let fast_reply_id = match ctx.next_fast_reply_id() {
+            Some(id) => id,
+            None => return Ok(Some(Message::new().add_text(self.command_usage()))),
+        };
+        let res = database::get_fast_reply_content(fast_reply_id).await?;
+        if let Some(content) = res {
+            Ok(Some(
+                Message::new().add_text(format!("#{}：\n{}", fast_reply_id, content)),
+            ))
+        } else {
+            Ok(Some(Message::new().add_text("未找到指定快捷回复。")))
+        }
+    }
+}

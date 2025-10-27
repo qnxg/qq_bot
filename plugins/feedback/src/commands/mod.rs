@@ -37,5 +37,6 @@ const COMMANDS: Lazy<Vec<Arc<dyn CommandHandler>>> = Lazy::new(|| {
         Arc::new(handler::fast_reply::FastReplyListCommand),
         Arc::new(handler::fast_reply::FastReplyUpdateCommand),
         Arc::new(handler::fast_reply::FastReplyDeleteCommand),
+        Arc::new(handler::fast_reply::FastReplyDetailCommand),
     ]
 });
