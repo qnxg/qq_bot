@@ -180,7 +180,7 @@ impl CommandHandler for FeedbackListCommand {
             .iter()
             .map(|feedback| utils::format_feedback_summary(feedback))
             .collect::<Vec<_>>()
-            .join("\n");
+            .join("\n\n");
         msg.push_str(&format!(
             "\n\n第 {} / {} 页，共 {} 条反馈。",
             page, total_pages, total_count
