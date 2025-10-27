@@ -1,6 +1,7 @@
 use crate::{
     config::CFG,
     entities::{FeedbackDetail, FeedbackStatus},
+    utils,
 };
 use anyhow::Result;
 use kovi::tokio::sync::OnceCell;
@@ -49,7 +50,7 @@ pub async fn get_feedback_list(
 ) -> Result<Vec<FeedbackDetail>> {
     let offset = (page.saturating_sub(1) * page_size) as i64;
     let limit = page_size as i64;
-    let feedbacks = sqlx::query_as!(
+    let mut feedbacks = sqlx::query_as!(
         FeedbackDetail,
         r#"
         SELECT id, contact, createTime AS create_time, `desc`, imgUrl AS img_url, stuId AS stu_id, status, comment
@@ -64,6 +65,9 @@ pub async fn get_feedback_list(
     )
     .fetch_all(&get_db_pool().await)
     .await?;
+    feedbacks
+        .iter_mut()
+        .for_each(|e| e.create_time = utils::convert_utc_to_utc8(e.create_time));
     Ok(feedbacks)
 }
 
@@ -79,6 +83,10 @@ pub async fn get_feedback_detail(id: u32) -> Result<Option<FeedbackDetail>> {
     )
     .fetch_optional(&get_db_pool().await)
     .await?;
+    let feedback = feedback.map(|mut e| {
+        e.create_time = utils::convert_utc_to_utc8(e.create_time);
+        e
+    });
     Ok(feedback)
 }
 
