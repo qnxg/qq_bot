@@ -52,3 +52,13 @@ pub fn convert_utc_to_utc8(utc_time: NaiveDateTime) -> NaiveDateTime {
     let utc8_offset = FixedOffset::east_opt(8 * 3600).unwrap();
     utc_dt.with_timezone(&utc8_offset).naive_local()
 }
+
+/// 将字符串压缩到指定长度，超出部分用 "..." 代替
+pub fn truncate_string(s: &str, max_len: usize) -> String {
+    if s.chars().count() <= max_len {
+        s.to_string()
+    } else {
+        let truncated: String = s.chars().take(max_len).collect();
+        format!("{}...", truncated)
+    }
+}

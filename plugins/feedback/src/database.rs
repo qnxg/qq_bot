@@ -126,17 +126,17 @@ pub async fn get_feedback_count(status: &FeedbackStatus) -> Result<u32> {
     Ok(count as u32)
 }
 
-pub async fn get_fast_reply_list() -> Result<Vec<String>> {
+pub async fn get_fast_reply_list() -> Result<Vec<(String, String)>> {
     let replies = sqlx::query!(
         r#"
-        SELECT id
+        SELECT id, content
         FROM fast_reply
         "#
     )
     .fetch_all(&get_db_pool().await)
     .await?
     .into_iter()
-    .map(|record| record.id)
+    .map(|record| (record.id, record.content))
     .collect();
     Ok(replies)
 }

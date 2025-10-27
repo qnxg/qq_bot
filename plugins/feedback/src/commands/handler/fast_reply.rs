@@ -1,6 +1,6 @@
 use crate::{
     commands::framework::{CommandContext, CommandHandler},
-    database,
+    database, utils,
 };
 use anyhow::Result;
 use async_trait::async_trait;
@@ -26,9 +26,11 @@ impl CommandHandler for FastReplyListCommand {
             Message::new().add_text(
                 fast_replies
                     .iter()
-                    .map(|s| format!("#{}\n", s))
+                    .map(|(id, content)| {
+                        format!("#{}\n{}", id, utils::truncate_string(content, 10))
+                    })
                     .collect::<Vec<_>>()
-                    .join("\n"),
+                    .join("\n\n"),
             ),
         ))
     }
