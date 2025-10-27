@@ -55,7 +55,7 @@ pub async fn get_feedback_list(
         SELECT id, contact, createTime AS create_time, `desc`, imgUrl AS img_url, stuId AS stu_id, status, comment
         FROM feedbacks
         WHERE status = ?
-        ORDER BY createTime DESC
+        ORDER BY id DESC
         LIMIT ? OFFSET ?
         "#,
         i8::from(*status),
