@@ -79,7 +79,10 @@ impl CommandHandler for FeedbackConfirmCommand {
             Some(id) => id,
             None => return Ok(Some(Message::new().add_text(self.command_usage()))),
         };
-        let reply_content = ctx.get_content_or_fast_reply().await?;
+        let reply_content = ctx
+            .get_content_or_fast_reply()
+            .await?
+            .unwrap_or(String::from("问题已解决"));
         if let Some(feedback) = database::get_feedback_detail(feedback_id).await? {
             api::update_feedback(
                 feedback_id,
@@ -119,7 +122,10 @@ impl CommandHandler for FeedbackResolveCommand {
             Some(id) => id,
             None => return Ok(Some(Message::new().add_text(self.command_usage()))),
         };
-        let reply_content = ctx.get_content_or_fast_reply().await?;
+        let reply_content = ctx
+            .get_content_or_fast_reply()
+            .await?
+            .unwrap_or(String::from("已经确认该问题，正在解决..."));
         if let Some(feedback) = database::get_feedback_detail(feedback_id).await? {
             api::update_feedback(
                 feedback_id,
