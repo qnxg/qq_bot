@@ -1,3 +1,6 @@
+use crate::{
+    entities::{FeedbackDetail,FeedbackListResponse, FeedbackStatus},
+};
 use anyhow::{Result, anyhow};
 use once_cell::sync::Lazy;
 use reqwest::{Client, header::HeaderMap, redirect::Policy};
@@ -20,6 +23,27 @@ pub static CLIENT: Lazy<Client> = Lazy::new(|| {
         .build()
         .unwrap()
 });
+
+pub async fn get_feedback_list(
+    status: &FeedbackStatus,
+    page: u32,
+    page_size: u32,
+) -> Result<Vec<FeedbackDetail>> {
+    let url = format!("{}/feedback?status={}&page={}&pageSize={}", CFG.yqwork.url, status, page, page_size);
+    let res = reqwest::get(url)
+        .await?
+        .json::<FeedbackListResponse>()
+        .await?;
+    Ok(response.rows) 
+}
+
+pub async fn get_feedback_detail(id: u32) -> Result<Option<FeedbackDetail>> {
+    todo!()
+}
+
+pub async fn get_feedback_count(status: &FeedbackStatus) -> Result<u32> {
+    todo!()
+}
 
 pub async fn update_feedback(
     feedback_id: u32,

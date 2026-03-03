@@ -25,7 +25,7 @@ impl CommandHandler for FeedbackDetailCommand {
             Some(id) => id,
             None => return Ok(Some(Message::new().add_text(self.command_usage()))),
         };
-        if let Some(feedback) = database::get_feedback_detail(feedback_id).await? {
+        if let Some(feedback) = api::get_feedback_detail(feedback_id).await? {
             Ok(Some(
                 Message::new().add_text(utils::format_feedback_detail(&feedback)),
             ))
@@ -51,7 +51,7 @@ impl CommandHandler for FeedbackImageCommand {
             Some(id) => id,
             None => return Ok(Some(Message::new().add_text(self.command_usage()))),
         };
-        if let Some(feedback) = database::get_feedback_detail(feedback_id).await? {
+        if let Some(feedback) = api::get_feedback_detail(feedback_id).await? {
             if let Some(img_url) = &feedback.img_url {
                 return Ok(Some(Message::new().add_image(img_url)));
             } else {
@@ -83,7 +83,7 @@ impl CommandHandler for FeedbackConfirmCommand {
             .get_content_or_fast_reply()
             .await?
             .unwrap_or(String::from("已经确认该问题，正在解决..."));
-        if let Some(feedback) = database::get_feedback_detail(feedback_id).await? {
+        if let Some(feedback) = api::get_feedback_detail(feedback_id).await? {
             api::update_feedback(
                 feedback_id,
                 FeedbackStatus::Confirmed,
@@ -91,7 +91,7 @@ impl CommandHandler for FeedbackConfirmCommand {
                 feedback.stu_id,
             )
             .await?;
-            if let Some(feedback) = database::get_feedback_detail(feedback_id).await? {
+            if let Some(feedback) = api::get_feedback_detail(feedback_id).await? {
                 Ok(Some(
                     Message::new().add_text(utils::format_feedback_detail(&feedback)),
                 ))
@@ -126,7 +126,7 @@ impl CommandHandler for FeedbackResolveCommand {
             .get_content_or_fast_reply()
             .await?
             .unwrap_or(String::from("问题已解决"));
-        if let Some(feedback) = database::get_feedback_detail(feedback_id).await? {
+        if let Some(feedback) = api::get_feedback_detail(feedback_id).await? {
             api::update_feedback(
                 feedback_id,
                 FeedbackStatus::Resolved,
@@ -134,7 +134,7 @@ impl CommandHandler for FeedbackResolveCommand {
                 feedback.stu_id,
             )
             .await?;
-            if let Some(feedback) = database::get_feedback_detail(feedback_id).await? {
+            if let Some(feedback) = api::get_feedback_detail(feedback_id).await? {
                 Ok(Some(
                     Message::new().add_text(utils::format_feedback_detail(&feedback)),
                 ))
@@ -170,9 +170,9 @@ impl CommandHandler for FeedbackListCommand {
         };
         let page = ctx.next_number().unwrap_or(1).max(1) as u32;
         let per_page = ctx.next_number().unwrap_or(5).clamp(1, 20) as u32;
-        let total_count = database::get_feedback_count(&status).await?;
+        let total_count = api::get_feedback_count(&status).await?;
         let total_pages = (total_count + per_page - 1) / per_page;
-        let feedbacks = database::get_feedback_list(&status, page, per_page).await?;
+        let feedbacks = api::get_feedback_list(&status, page, per_page).await?;
         if feedbacks.is_empty() {
             return Ok(Some(Message::new().add_text("没有找到符合条件的反馈。")));
         }

@@ -30,19 +30,23 @@ impl From<FeedbackStatus> for i8 {
     }
 }
 
-#[derive(sqlx::FromRow)]
+pub struct FeedbackListResponse {
+    pub rows: Vec<FeedbackDetail>,
+    pub count: i64,
+}
+
+#[derive(serde::Serialize)]
 pub struct FeedbackDetail {
     pub id: i32,
     #[allow(unused)]
     pub contact: Option<String>,
-    #[sqlx(rename = "createTime")]
+    #[serde(rename = "createdAt")]
     pub create_time: chrono::NaiveDateTime,
     pub desc: String,
-    #[sqlx(rename = "imgUrl")]
+    #[serde(rename = "imgUrl")]
     pub img_url: Option<String>,
-    #[sqlx(rename = "stuId")]
+    #[serde(rename = "stuId")]
     pub stu_id: Option<String>,
-    #[sqlx(try_from = "Option<i8>")]
     #[allow(unused)]
     pub status: FeedbackStatus,
     pub comment: Option<String>,
@@ -55,3 +59,4 @@ pub struct RabbitFeedbackMessage {
     pub img_url: Option<String>,
     pub id: u64,
 }
+
