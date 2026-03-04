@@ -30,11 +30,13 @@ pub async fn get_feedback_list(
     page_size: u32,
 ) -> Result<Vec<FeedbackDetail>> {
     let url = format!("{}/feedback?status={}&page={}&pageSize={}", CFG.yqwork.url, status, page, page_size);
-    let res = reqwest::get(url)
+    let res = CLIENT
+        .get(&url)
+        .send()
         .await?
         .json::<FeedbackListResponse>()
         .await?;
-    Ok(response.rows) 
+    Ok(res.rows) 
 }
 
 pub async fn get_feedback_detail(id: u32) -> Result<Option<FeedbackDetail>> {
@@ -99,4 +101,50 @@ pub async fn update_feedback(
         }
     }
     Ok(())
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+    use crate::entities::{FeedbackDetail, FeedbackListResponse, FeedbackStatus};
+
+    #[tokio::test]
+    async fn test_get_feedback_list() {
+        
+        let status = FeedbackStatus::Unconfirmed;
+        let page = 1;
+        let page_size = 10;
+        
+        let result = get_feedback_list(&status, page, page_size).await.unwrap();
+        println!("get_feedback_list 条数：{}", result.len());
+    }
+
+    #[tokio::test]
+    async fn test_get_feedback_detail() {
+
+        let test_id = 1;
+        
+        let result = get_feedback_detail(test_id).await;
+        match result {
+            Ok(Some(feedback)) => {
+                println!("成功获取ID为{}的反馈", test_id);
+            }
+            Ok(None) => {
+                println!("未找到ID为{}的反馈", test_id);
+            }
+            Err(e) => {
+                eprintln!("get_feedback_detail运行失败: {}", e);
+            }
+        }
+    }
+
+    #[tokio::test]
+    async fn test_get_feedback_count() {
+
+        let status = FeedbackStatus::Unconfirmed;
+
+        let result = get_feedback_count(&status).await.unwrap();
+        println!("get_feedback_count 条数：{}",result);
+    }
+
 }
