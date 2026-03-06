@@ -7,7 +7,7 @@ use reqwest::{Client, header::HeaderMap, redirect::Policy};
 use serde_json::{Value, json};
 use std::time::Duration;
 
-use crate::{config::CFG, entities::FeedbackStatus, utils};
+use crate::{config::CFG, utils};
 
 pub static CLIENT: Lazy<Client> = Lazy::new(|| {
     Client::builder()
@@ -106,6 +106,7 @@ pub async fn update_feedback(
 #[cfg(test)]
 mod tests {
     use super::*;
+    use kovi::tokio;
     use crate::entities::{FeedbackDetail, FeedbackListResponse, FeedbackStatus};
 
     #[tokio::test]

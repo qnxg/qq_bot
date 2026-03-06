@@ -1,11 +1,22 @@
 use serde::Deserialize;
 use sqlx::types::chrono;
 
-#[derive(Clone, Copy)]
+#[derive(Clone, Copy, serde::Serialize, serde::Deserialize)]
 pub enum FeedbackStatus {
     Unconfirmed,
     Confirmed,
     Resolved,
+}
+
+impl std::fmt::Display for FeedbackStatus {
+    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+        let s = match self {
+            FeedbackStatus::Unconfirmed => "Unconfirmed",
+            FeedbackStatus::Confirmed => "Confirmed",
+            FeedbackStatus::Resolved => "Resolved",
+        };
+        write!(f, "{}", s)
+    }
 }
 
 impl From<Option<i8>> for FeedbackStatus {
@@ -30,12 +41,13 @@ impl From<FeedbackStatus> for i8 {
     }
 }
 
+#[derive(Deserialize)]
 pub struct FeedbackListResponse {
     pub rows: Vec<FeedbackDetail>,
     pub count: i64,
 }
 
-#[derive(serde::Serialize)]
+#[derive(serde::Serialize, Deserialize)]
 pub struct FeedbackDetail {
     pub id: i32,
     #[allow(unused)]

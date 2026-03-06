@@ -44,74 +44,79 @@ pub async fn get_db_pool() -> MySqlPool {
 }
 
 pub async fn get_fast_reply_list() -> Result<Vec<(String, String)>> {
-    let replies = sqlx::query!(
-        r#"
-        SELECT id, content
-        FROM fast_reply
-        "#
-    )
-    .fetch_all(&get_db_pool().await)
-    .await?
-    .into_iter()
-    .map(|record| (record.id, record.content))
-    .collect();
-    Ok(replies)
+    // let replies = sqlx::query!(
+    //     r#"
+    //     SELECT id, content
+    //     FROM fast_reply
+    //     "#
+    // )
+    // .fetch_all(&get_db_pool().await)
+    // .await?
+    // .into_iter()
+    // .map(|record| (record.id, record.content))
+    // .collect();
+    // Ok(replies)
+    todo!()
 }
 
 pub async fn get_fast_reply_content(id: &str) -> Result<Option<String>> {
-    let content = sqlx::query_scalar!(
-        r#"
-        SELECT content
-        FROM fast_reply
-        WHERE id = ?
-        "#,
-        id
-    )
-    .fetch_optional(&get_db_pool().await)
-    .await?;
-    Ok(content)
+    // let content = sqlx::query_scalar!(
+    //     r#"
+    //     SELECT content
+    //     FROM fast_reply
+    //     WHERE id = ?
+    //     "#,
+    //     id
+    // )
+    // .fetch_optional(&get_db_pool().await)
+    // .await?;
+    // Ok(content)
+    todo!()
 }
 
 pub async fn update_fast_reply(id: &str, content: &str) -> Result<()> {
-    sqlx::query!(
-        r#"
-        INSERT INTO fast_reply
-        (id, content)
-        VALUES (?, ?)
-        ON DUPLICATE KEY UPDATE content = ?
-        "#,
-        id,
-        content,
-        content
-    )
-    .execute(&get_db_pool().await)
-    .await?;
-    Ok(())
+    // sqlx::query!(
+    //     r#"
+    //     INSERT INTO fast_reply
+    //     (id, content)
+    //     VALUES (?, ?)
+    //     ON DUPLICATE KEY UPDATE content = ?
+    //     "#,
+    //     id,
+    //     content,
+    //     content
+    // )
+    // .execute(&get_db_pool().await)
+    // .await?;
+    // Ok(())
+    todo!()
 }
 
 pub async fn delete_fast_reply(id: &str) -> Result<()> {
-    sqlx::query!(
-        r#"
-        DELETE FROM fast_reply
-        WHERE id = ?
-        "#,
-        id
-    )
-    .execute(&get_db_pool().await)
-    .await?;
-    Ok(())
+    // sqlx::query!(
+    //     r#"
+    //     DELETE FROM fast_reply
+    //     WHERE id = ?
+    //     "#,
+    //     id
+    // )
+    // .execute(&get_db_pool().await)
+    // .await?;
+    // Ok(())
+    todo!()
 }
 
 pub async fn get_feedback_id_by_msg(msg_id: i64) -> Result<Option<u32>> {
-    let feedback_id = sqlx::query_scalar!(
-        r#"
-        SELECT id
-        FROM feedbacks
-        WHERE qqbot_msg_id = ?
-        "#,
-        msg_id
-    )
-    .fetch_optional(&get_db_pool().await)
-    .await?;
-    Ok(feedback_id.map(|id| id as u32))
+    // let feedback_id = sqlx::query_scalar!(
+    //     r#"
+    //     SELECT id
+    //     FROM feedbacks
+    //     WHERE qqbot_msg_id = ?
+    //     "#,
+    //     msg_id
+    // )
+    // .fetch_optional(&get_db_pool().await)
+    // .await?;
+    // Ok(feedback_id.map(|id| id as u32))
+    todo!()
 }
