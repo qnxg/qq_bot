@@ -1,7 +1,6 @@
 use crate::{
     api,
     commands::framework::{CommandContext, CommandHandler},
-    database,
     entities::FeedbackStatus,
     utils,
 };
