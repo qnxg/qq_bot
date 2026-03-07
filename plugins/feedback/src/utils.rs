@@ -38,6 +38,7 @@ pub fn format_feedback_detail(feedback: &FeedbackDetail) -> String {
 }
 
 /// %Y-%m-%d %H:%M:%S，时区为 UTC+8
+#[allow(unused)]
 pub fn get_now_time() -> String {
     let utc_now = chrono::Utc::now();
     let utc_plus_8 = chrono::FixedOffset::east_opt(8 * 3600).unwrap();
@@ -47,6 +48,7 @@ pub fn get_now_time() -> String {
 
 /// 将 UTC 时间转为 UTC+8 时间
 /// 目前数据库里存放的时间都是 UTC 时间
+#[allow(unused)]
 pub fn convert_utc_to_utc8(utc_time: NaiveDateTime) -> NaiveDateTime {
     let utc_dt = Utc.from_utc_datetime(&utc_time);
     let utc8_offset = FixedOffset::east_opt(8 * 3600).unwrap();

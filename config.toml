@@ -3,8 +3,8 @@ url = "amqp://用户名:密码@ip地址:端口/VirtualHost" # VirtualHost 需要
 feedback_queue = "feedback.qqrobot"       # 在哪个队列上接收反馈消息
 
 [database]
-max_connections = 100
-database_url = "mysql://用户名:密码@ip地址:端口/数据库表名" # 数据库需要和后端使用的保持一致
+max_connections = 5  # SQLite 建议使用较小的连接数，通常 5-10 足够
+database_url = "sqlite:feedback.db"  # SQLite 数据库文件路径，会自动创建
 
 [feedback]
 admin_qq = ["3102733279"] # 管理员 QQ 号列表
