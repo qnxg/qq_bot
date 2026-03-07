@@ -37,6 +37,11 @@ pub struct FeedbackListResponse {
 }
 
 #[derive(Deserialize)]
+pub struct FeedbackResponse {
+    pub data: Option<FeedbackDetail>,
+}
+
+#[derive(Deserialize)]
 pub struct FeedbackListData {
     pub rows: Vec<FeedbackDetail>,
     pub count: i64,
