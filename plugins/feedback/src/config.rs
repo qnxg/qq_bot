@@ -39,7 +39,7 @@ pub struct YQWork {
 }
 
 fn init() -> Configs {
-    let mut file = File::open("config.toml").expect("读取配置文件失败");
+    let mut file = File::open( if cfg!(test) {"../../config.toml"} else {"config.toml"}).expect("读取配置文件失败");
     let mut contents = String::new();
     file.read_to_string(&mut contents)
         .expect("读取配置文件失败");

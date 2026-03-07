@@ -29,14 +29,14 @@ pub async fn get_feedback_list(
     page: u32,
     page_size: u32,
 ) -> Result<Vec<FeedbackDetail>> {
-    let url = format!("{}/feedback?status={}&page={}&pageSize={}", CFG.yqwork.url, status, page, page_size);
+    let url = format!("{}/feedback?status={}&page={}&pageSize={}", CFG.yqwork.url, (*status) as i8, page, page_size);
     let res = CLIENT
         .get(&url)
         .send()
         .await?
         .json::<FeedbackListResponse>()
         .await?;
-    Ok(res.rows) 
+    Ok(res.data.rows) 
 }
 
 pub async fn get_feedback_detail(id: u32) -> Result<Option<FeedbackDetail>> {

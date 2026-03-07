@@ -1,22 +1,12 @@
-use serde::Deserialize;
+use serde::{Deserialize, Serialize};
 use sqlx::types::chrono;
 
 #[derive(Clone, Copy, serde::Serialize, serde::Deserialize)]
+#[serde(from = "Option<i8>")]
 pub enum FeedbackStatus {
     Unconfirmed,
     Confirmed,
     Resolved,
-}
-
-impl std::fmt::Display for FeedbackStatus {
-    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
-        let s = match self {
-            FeedbackStatus::Unconfirmed => "Unconfirmed",
-            FeedbackStatus::Confirmed => "Confirmed",
-            FeedbackStatus::Resolved => "Resolved",
-        };
-        write!(f, "{}", s)
-    }
 }
 
 impl From<Option<i8>> for FeedbackStatus {
@@ -43,16 +33,21 @@ impl From<FeedbackStatus> for i8 {
 
 #[derive(Deserialize)]
 pub struct FeedbackListResponse {
+    pub data: FeedbackListData,
+}
+
+#[derive(Deserialize)]
+pub struct FeedbackListData {
     pub rows: Vec<FeedbackDetail>,
     pub count: i64,
 }
 
-#[derive(serde::Serialize, Deserialize)]
+#[derive(Serialize, Deserialize)]
 pub struct FeedbackDetail {
     pub id: i32,
     #[allow(unused)]
     pub contact: Option<String>,
-    #[serde(rename = "createdAt")]
+   #[serde(rename = "createdAt")]
     pub create_time: chrono::NaiveDateTime,
     pub desc: String,
     #[serde(rename = "imgUrl")]
@@ -61,6 +56,9 @@ pub struct FeedbackDetail {
     pub stu_id: Option<String>,
     #[allow(unused)]
     pub status: FeedbackStatus,
+    #[serde(rename = "updatedAt")]
+    pub update_time: chrono::NaiveDateTime,
+    #[serde(default)]
     pub comment: Option<String>,
 }
 
