@@ -55,7 +55,7 @@ pub struct FeedbackResponse {
 #[derive(Deserialize)]
 pub struct FeedbackListData {
     pub rows: Vec<FeedbackDetail>,
-    pub count: i64,
+    pub count: u32,
 }
 
 #[derive(Serialize, Deserialize)]

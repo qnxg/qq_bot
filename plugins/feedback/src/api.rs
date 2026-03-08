@@ -57,7 +57,7 @@ pub async fn get_feedback_count(status: &FeedbackStatus) -> Result<u32> {
         .await?
         .json::<FeedbackListResponse>()
        .await?;
-    Ok(res.data.count as u32)
+    Ok(res.data.count)
 }
 
 pub async fn add_feedback_msg(
