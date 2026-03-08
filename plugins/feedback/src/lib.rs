@@ -115,22 +115,16 @@ async fn listen_feedback(bot: Arc<RuntimeBot>) {
             .await
         {
             Ok(msg_id) => {
-                let res = sqlx::query!(
-                    r#"
-                    INSERT INTO feedbacks (qqbot_msg_id)
-                    VALUES (?)
-                    "#,
-                    msg_id
-                )
-                .execute(&database::get_db_pool().await)
-                .await;
-                if let Err(e) = res {
-                    tracing::error!("插入反馈消息的 qqbot_msg_id 失败: {:?}", e);
-                } else {
-                    delivery
-                        .ack(lapin::options::BasicAckOptions::default())
-                        .await
-                        .expect("ack 失败");
+                match database::update_feedback_msg_id(msg_id as i64).await {
+                    Ok(_) => {
+                        delivery
+                            .ack(lapin::options::BasicAckOptions::default())
+                            .await
+                            .expect("ack 失败");
+                    }
+                    Err(e) => {
+                        tracing::error!("插入反馈消息的 qqbot_msg_id 失败: {:?}", e);
+                    }
                 }
             }
             Err(e) => {

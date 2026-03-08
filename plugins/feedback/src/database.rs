@@ -113,3 +113,16 @@ pub async fn get_feedback_id_by_msg(msg_id: i64) -> Result<Option<u32>> {
     .await?;
     Ok(feedback_id.and_then(|row| row.id.map(|id| id as u32)))
 }
+
+pub async fn update_feedback_msg_id(msg_id: i64) -> Result<()> {
+    sqlx::query!(
+        r#"
+        INSERT INTO feedbacks (qqbot_msg_id)
+        VALUES (?)
+        "#,
+        msg_id
+    )
+    .execute(&get_db_pool().await)
+    .await?;
+    Ok(())
+}
