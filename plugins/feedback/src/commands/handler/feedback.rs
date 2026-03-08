@@ -82,12 +82,11 @@ impl CommandHandler for FeedbackConfirmCommand {
             .get_content_or_fast_reply()
             .await?
             .unwrap_or(String::from("已经确认该问题，正在解决..."));
-        if let Some(feedback) = api::get_feedback_detail(feedback_id).await? {
+        if let Some( _feedback ) = api::get_feedback_detail(feedback_id).await? {
             api::update_feedback(
                 feedback_id,
                 FeedbackStatus::Confirmed,
-                reply_content,
-                feedback.stu_id,
+                reply_content
             )
             .await?;
             if let Some(feedback) = api::get_feedback_detail(feedback_id).await? {
@@ -125,12 +124,11 @@ impl CommandHandler for FeedbackResolveCommand {
             .get_content_or_fast_reply()
             .await?
             .unwrap_or(String::from("问题已解决"));
-        if let Some(feedback) = api::get_feedback_detail(feedback_id).await? {
+        if let Some( _feedback) = api::get_feedback_detail(feedback_id).await? {
             api::update_feedback(
                 feedback_id,
                 FeedbackStatus::Resolved,
-                reply_content,
-                feedback.stu_id,
+                reply_content
             )
             .await?;
             if let Some(feedback) = api::get_feedback_detail(feedback_id).await? {

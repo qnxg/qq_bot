@@ -31,6 +31,17 @@ impl From<FeedbackStatus> for i8 {
     }
 }
 
+impl std::fmt::Debug for FeedbackStatus {
+    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+        let status_str = match self {
+            FeedbackStatus::Unconfirmed => "Unconfirmed",
+            FeedbackStatus::Confirmed => "Confirmed",
+            FeedbackStatus::Resolved => "Resolved",
+        };
+        write!(f, "{}", status_str)
+    }
+}
+
 #[derive(Deserialize)]
 pub struct FeedbackListResponse {
     pub data: FeedbackListData,

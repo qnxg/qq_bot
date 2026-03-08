@@ -82,8 +82,7 @@ pub async fn add_feedback_msg(
 pub async fn update_feedback(
     feedback_id: u32,
     status: FeedbackStatus,
-    comment: String,
-    #[allow(unused)] notice_stuid: Option<String>,
+    comment: String
 ) -> Result<()> {
     add_feedback_msg( feedback_id, comment).await?;
     
@@ -149,6 +148,30 @@ mod tests {
 
         let result = get_feedback_count(&status).await.unwrap();
         println!("get_feedback_count 条数：{}",result);
+    }
+
+    #[tokio::test]
+    async fn test_update_feedback() {
+        let feedback_id = 2879;
+        
+        let statuses = [
+            FeedbackStatus::Unconfirmed,
+            FeedbackStatus::Confirmed,
+            FeedbackStatus::Resolved,
+        ];
+        
+        for status in statuses.iter() {
+            let comment = format!("正在测试的status: {:?}", status);
+            
+            match update_feedback(feedback_id, *status, comment).await {
+                Ok(_) => {
+                    println!("成功更新feedback ID {} 为状态 {:?}", feedback_id, status);
+                }
+                Err(e) => {
+                    assert!(false, "测试失败: {}", e);
+                }
+            }
+        }
     }
 
 }
