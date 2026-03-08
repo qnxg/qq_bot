@@ -43,14 +43,12 @@ impl std::fmt::Debug for FeedbackStatus {
 }
 
 #[derive(Deserialize)]
-pub struct FeedbackListResponse {
-    pub data: FeedbackListData,
+pub struct ApiResponse<T> {
+    pub data: T,
 }
 
-#[derive(Deserialize)]
-pub struct FeedbackResponse {
-    pub data: Option<FeedbackDetail>,
-}
+pub type FeedbackListResponse = ApiResponse<FeedbackListData>;
+pub type FeedbackResponse = ApiResponse<Option<FeedbackDetail>>;
 
 #[derive(Deserialize)]
 pub struct FeedbackListData {
