@@ -14,8 +14,8 @@ CREATE TABLE IF NOT EXISTS fast_reply (
 
 -- 创建反馈记录表
 CREATE TABLE IF NOT EXISTS feedbacks (
-    id INTEGER PRIMARY KEY AUTOINCREMENT,
-    qqbot_msg_id INTEGER
+    feedback_id INTEGER UNSIGNED,
+    qqbot_msg_id INTEGER UNSIGNED
 );
 
 -- 创建索引以提高查询性能

@@ -103,7 +103,7 @@ pub async fn delete_fast_reply(id: &str) -> Result<()> {
 pub async fn get_feedback_id_by_msg(msg_id: i64) -> Result<Option<u32>> {
     let feedback_id = sqlx::query!(
         r#"
-        SELECT id
+        SELECT feedback_id
         FROM feedbacks
         WHERE qqbot_msg_id = ?
         "#,
@@ -111,15 +111,16 @@ pub async fn get_feedback_id_by_msg(msg_id: i64) -> Result<Option<u32>> {
     )
     .fetch_optional(&get_db_pool().await)
     .await?;
-    Ok(feedback_id.and_then(|row| row.id.map(|id| id as u32)))
+    Ok(feedback_id.and_then(|row| row.feedback_id.map(|id| id as u32)))
 }
 
-pub async fn update_feedback_msg_id(msg_id: i64) -> Result<()> {
+pub async fn update_feedback_msg_id(feedback_id: u32, msg_id: i32) -> Result<()> {
     sqlx::query!(
         r#"
-        INSERT INTO feedbacks (qqbot_msg_id)
-        VALUES (?)
+        INSERT INTO feedbacks (feedback_id, qqbot_msg_id)
+        VALUES (?, ?)
         "#,
+        feedback_id,
         msg_id
     )
     .execute(&get_db_pool().await)
@@ -164,8 +165,8 @@ mod tests {
         sqlx::query(
             r#"
             CREATE TABLE IF NOT EXISTS feedbacks (
-                id INTEGER PRIMARY KEY AUTOINCREMENT,
-                qqbot_msg_id INTEGER
+                feedback_id INTEGER UNSIGNED,
+                qqbot_msg_id INTEGER UNSIGNED
             );
             "#
         )
@@ -285,7 +286,7 @@ mod tests {
     async fn test_feedback_operations() {
         with_test_pool(|pool| async move {
             // 测试插入 feedback
-            update_feedback_msg_id_with_pool(&pool, 12345)
+            update_feedback_msg_id_with_pool(&pool, 1, 12345)
                 .await
                 .expect("Failed to insert feedback");
 
@@ -302,10 +303,10 @@ mod tests {
             assert_eq!(feedback_id, None);
 
             // 测试插入多个 feedback
-            update_feedback_msg_id_with_pool(&pool, 12346)
+            update_feedback_msg_id_with_pool(&pool, 2, 12346)
                 .await
                 .expect("Failed to insert");
-            update_feedback_msg_id_with_pool(&pool, 12347)
+            update_feedback_msg_id_with_pool(&pool, 3, 12347)
                 .await
                 .expect("Failed to insert");
 
@@ -386,7 +387,7 @@ mod tests {
     async fn get_feedback_id_by_msg_with_pool(pool: &SqlitePool, msg_id: i64) -> Result<Option<u32>> {
         let feedback_id = sqlx::query!(
             r#"
-            SELECT id
+            SELECT feedback_id
             FROM feedbacks
             WHERE qqbot_msg_id = ?
             "#,
@@ -394,15 +395,16 @@ mod tests {
         )
         .fetch_optional(pool)
         .await?;
-        Ok(feedback_id.and_then(|row| row.id.map(|id| id as u32)))
+        Ok(feedback_id.and_then(|row| row.feedback_id.map(|id| id as u32)))
     }
 
-    async fn update_feedback_msg_id_with_pool(pool: &SqlitePool, msg_id: i64) -> Result<()> {
+    async fn update_feedback_msg_id_with_pool(pool: &SqlitePool, feedback_id: u32, msg_id: i64) -> Result<()> {
         sqlx::query!(
             r#"
-            INSERT INTO feedbacks (qqbot_msg_id)
-            VALUES (?)
+            INSERT INTO feedbacks (feedback_id, qqbot_msg_id)
+            VALUES (?, ?)
             "#,
+            feedback_id,
             msg_id
         )
         .execute(pool)

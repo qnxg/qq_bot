@@ -115,7 +115,7 @@ async fn listen_feedback(bot: Arc<RuntimeBot>) {
             .await
         {
             Ok(msg_id) => {
-                match database::update_feedback_msg_id(msg_id as i64).await {
+                match database::update_feedback_msg_id(feedback.id as u32, msg_id).await {
                     Ok(_) => {
                         delivery
                             .ack(lapin::options::BasicAckOptions::default())
