@@ -11,19 +11,19 @@ use kovi::tokio::sync::RwLock;
 
 use crate::config::CFG;
 
-/// JWT payload 结构
+// JWT payload 结构
 #[derive(Deserialize, Debug, Serialize)]
 struct Payload {
     id: u32,
     exp: usize,
 }
 
-/// Token 缓存
+// Token 缓存
 static TOKEN_CACHE: Lazy<Arc<RwLock<String>>> = Lazy::new(|| {
     Arc::new(RwLock::new(generate_token()))
 });
 
-/// 生成新 token
+// 生成新 token
 fn generate_token() -> String {
     let now = SystemTime::now()
         .duration_since(UNIX_EPOCH)
@@ -32,7 +32,7 @@ fn generate_token() -> String {
 
     let payload = Payload {
         id: CFG.yqwork.uid,
-        exp: now + 60 * 60 * 24, // 1 天过期
+        exp: now + 60 * 60 * 8, // 8 小时过期
     };
 
     jsonwebtoken::encode(
@@ -42,7 +42,7 @@ fn generate_token() -> String {
     ).expect("生成 token 失败")
 }
 
-/// 获取有效 token，过期自动刷新
+// 获取有效 token，过期自动刷新
 async fn get_token() -> String {
     let token = TOKEN_CACHE.read().await;
 
@@ -78,7 +78,7 @@ pub static CLIENT: Lazy<Client> = Lazy::new(|| {
         .unwrap()
 });
 
-/// 统一请求函数，自动添加 token
+// 统一请求函数，自动添加 token
 async fn request(method: reqwest::Method, url: &str, body: Option<serde_json::Value>) -> Result<reqwest::Response> {
     let token = get_token().await;
     let mut req = CLIENT.request(method, url).header("Authorization", token);
