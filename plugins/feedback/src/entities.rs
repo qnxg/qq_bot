@@ -49,11 +49,47 @@ pub struct ApiResponse<T> {
 
 pub type FeedbackListResponse = ApiResponse<FeedbackListData>;
 pub type FeedbackResponse = ApiResponse<Option<FeedbackDetail>>;
+pub type FeedbackMsgListResponse = ApiResponse<Vec<FeedbackMsg>>;
 
 #[derive(Deserialize)]
 pub struct FeedbackListData {
     pub rows: Vec<FeedbackDetail>,
     pub count: u32,
+}
+
+#[derive(Clone, Copy, Serialize, Deserialize)]
+#[serde(from = "String", into = "String")]
+pub enum FeedbackMsgType {
+    Comment,
+}
+
+impl From<String> for FeedbackMsgType {
+    fn from(value: String) -> Self {
+        match value.as_str() {
+            "comment" => FeedbackMsgType::Comment,
+            _ => FeedbackMsgType::Comment,
+        }
+    }
+}
+
+impl From<FeedbackMsgType> for String {
+    fn from(value: FeedbackMsgType) -> Self {
+        let s = match value {
+            FeedbackMsgType::Comment => "comment",
+        };
+        s.to_string()
+    }
+}
+
+#[derive(Serialize, Deserialize)]
+pub struct FeedbackMsg {
+    pub id: u32,
+    pub typ: FeedbackMsgType,
+    pub msg: Option<String>,
+    #[serde(rename = "feedbackId")]
+    pub feedback_id: u32,
+    #[serde(rename = "createdAt")]
+    pub created_at: chrono::NaiveDateTime,
 }
 
 #[derive(Serialize, Deserialize)]
@@ -74,6 +110,8 @@ pub struct FeedbackDetail {
     pub update_time: chrono::NaiveDateTime,
     #[serde(default)]
     pub comment: Option<String>,
+    #[serde(default)]
+    pub msgs: Vec<FeedbackMsg>,
 }
 
 #[derive(Deserialize, Debug)]

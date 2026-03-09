@@ -1,4 +1,4 @@
-use crate::entities::{FeedbackDetail, FeedbackListResponse, FeedbackResponse, FeedbackStatus};
+use crate::entities::{FeedbackDetail, FeedbackListResponse, FeedbackMsg, FeedbackMsgListResponse, FeedbackResponse, FeedbackStatus};
 use anyhow::Result;
 use once_cell::sync::Lazy;
 use reqwest::{Client, header::HeaderMap, redirect::Policy};
@@ -39,13 +39,28 @@ pub async fn get_feedback_list(
 
 pub async fn get_feedback_detail(id: u32) -> Result<Option<FeedbackDetail>> {
     let url = format!("{}/feedback/{}", CFG.yqwork.url, id);
-    let res = CLIENT
+    let mut res = CLIENT
         .get(&url)
         .send()
         .await?
         .json::<FeedbackResponse>()
         .await?;
-    
+
+    if let Some(feedback) = &mut res.data {
+        feedback.msgs = get_feedback_msg_list(id).await?;
+    }
+
+    Ok(res.data)
+}
+
+pub async fn get_feedback_msg_list(feedback_id: u32) -> Result<Vec<FeedbackMsg>> {
+    let url = format!("{}/feedback/{}/msg", CFG.yqwork.url, feedback_id);
+    let res = CLIENT
+        .get(&url)
+        .send()
+        .await?
+        .json::<FeedbackMsgListResponse>()
+        .await?;
     Ok(res.data)
 }
 
@@ -79,21 +94,18 @@ pub async fn add_feedback_msg(
     Ok(())
 }
 
-pub async fn update_feedback(
+pub async fn update_feedback_status(
     feedback_id: u32,
     status: FeedbackStatus,
-    comment: String
 ) -> Result<()> {
-    add_feedback_msg( feedback_id, comment).await?;
-    
     if let Some(feedback_detail) = get_feedback_detail(feedback_id).await? {
         if feedback_detail.status as i8 != status as i8 {
             let url = format!("{}/feedback/{}", CFG.yqwork.url, feedback_id);
-            
+
             let body = json!({
                 "status": i8::from(status),
             });
-            
+
             CLIENT
                 .put(&url)
                 .json(&body)
@@ -101,7 +113,7 @@ pub async fn update_feedback(
                 .await?;
         }
     }
-    
+
     Ok(())
 }
 
@@ -151,21 +163,34 @@ mod tests {
     }
 
     #[tokio::test]
-    async fn test_update_feedback() {
+    async fn test_add_feedback_msg() {
         let feedback_id = 2879;
-        
+        let msg = "测试添加消息".to_string();
+
+        match add_feedback_msg(feedback_id, msg).await {
+            Ok(_) => {
+                println!("成功为反馈 ID {} 添加消息", feedback_id);
+            }
+            Err(e) => {
+                assert!(false, "测试失败: {}", e);
+            }
+        }
+    }
+
+    #[tokio::test]
+    async fn test_update_feedback_status() {
+        let feedback_id = 2879;
+
         let statuses = [
             FeedbackStatus::Unconfirmed,
             FeedbackStatus::Confirmed,
             FeedbackStatus::Resolved,
         ];
-        
+
         for status in statuses.iter() {
-            let comment = format!("正在测试的status: {:?}", status);
-            
-            match update_feedback(feedback_id, *status, comment).await {
+            match update_feedback_status(feedback_id, *status).await {
                 Ok(_) => {
-                    println!("成功更新feedback ID {} 为状态 {:?}", feedback_id, status);
+                    println!("成功更新反馈 ID {} 为状态 {:?}", feedback_id, status);
                 }
                 Err(e) => {
                     assert!(false, "测试失败: {}", e);
