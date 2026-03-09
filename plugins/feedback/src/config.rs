@@ -32,9 +32,10 @@ pub struct Database {
     pub max_connections: u32,
 }
 
-#[derive(Deserialize, Debug)]
+#[derive(Deserialize, Debug, Clone)]
 pub struct YQWork {
-    pub token: String,
+    pub uid: u32,
+    pub secret: String,
     pub url: String,
 }
 

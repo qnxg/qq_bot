@@ -11,5 +11,6 @@ admin_qq = [""] # 管理员 QQ 号列表
 group_id = ""   # 机器人响应哪个群
 
 [yqwork]
-token = ""                                   # 工作台的 token。登陆工作台后，HTTP 请求头中的 Authorization 字段（token 一般有效期是一天）
-url = "https://api.work.qnxg.cn" # 末尾不用添加 /
+uid = 0                                      # bot的用户ID
+secret = ""                                  # JWT密钥
+url = "https://api.work.qnxg.cn"             # 末尾不用添加 /
