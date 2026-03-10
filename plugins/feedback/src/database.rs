@@ -1,40 +1,36 @@
-use crate::{
-    config::CFG,
-    entities::{FeedbackDetail, FeedbackStatus},
-    utils,
-};
+use crate::config::CFG;
 use anyhow::Result;
 use kovi::tokio::sync::OnceCell;
-use sqlx::mysql::{MySqlPool, MySqlPoolOptions};
+use sqlx::sqlite::{SqlitePool, SqlitePoolOptions};
 use std::time::Duration;
 
-static DB_POOL: OnceCell<MySqlPool> = OnceCell::const_new();
+static DB_POOL: OnceCell<SqlitePool> = OnceCell::const_new();
 
 /// # Performance
 /// 参见 [`sqlx::pool::Pool`] 文档：
 /// > Cloning `Pool` is cheap as it is simply a
 /// > reference-counted handle to the inner pool state.
 ///
-/// 因此实际上没有必要将[`MySqlPool`]用[`std::sync::Arc`]等包裹。
+/// 因此实际上没有必要将[`SqlitePool`]用[`std::sync::Arc`]等包裹。
 /// 可以直接调用此函数获得全局数据库池。
 ///
 /// # Side Effects
 /// 数据库连接异常时，这个函数可能会结束进程。
-pub async fn get_db_pool() -> MySqlPool {
+pub async fn get_db_pool() -> SqlitePool {
     DB_POOL
         .get_or_init(|| async {
-            match MySqlPoolOptions::new()
+            match SqlitePoolOptions::new()
                 .max_connections(CFG.database.max_connections)
                 .acquire_timeout(Duration::from_secs(3))
                 .connect(&CFG.database.database_url)
                 .await
             {
                 Ok(pool) => {
-                    tracing::info!("🔥 Successfully connected to MySQL");
+                    tracing::info!("🔥 Successfully connected to SQLite");
                     pool
                 }
                 Err(e) => {
-                    tracing::error!("🪨 Failed to connect to MySQL: {:?}", e);
+                    tracing::error!("🪨 Failed to connect to SQLite: {:?}", e);
                     std::process::exit(1);
                 }
             }
@@ -43,101 +39,20 @@ pub async fn get_db_pool() -> MySqlPool {
         .clone()
 }
 
-pub async fn get_feedback_list(
-    status: &FeedbackStatus,
-    page: u32,
-    page_size: u32,
-) -> Result<Vec<FeedbackDetail>> {
-    let offset = (page.saturating_sub(1) * page_size) as i64;
-    let limit = page_size as i64;
-    let mut feedbacks = sqlx::query_as!(
-        FeedbackDetail,
-        r#"
-        SELECT id, contact, createTime AS create_time, `desc`, imgUrl AS img_url, stuId AS stu_id, status, comment
-        FROM feedbacks
-        WHERE status = ?
-        ORDER BY id DESC
-        LIMIT ? OFFSET ?
-        "#,
-        i8::from(*status),
-        limit,
-        offset
-    )
-    .fetch_all(&get_db_pool().await)
-    .await?;
-    feedbacks
-        .iter_mut()
-        .for_each(|e| e.create_time = utils::convert_utc_to_utc8(e.create_time));
-    Ok(feedbacks)
-}
-
-pub async fn get_feedback_detail(id: u32) -> Result<Option<FeedbackDetail>> {
-    let feedback = sqlx::query_as!(
-        FeedbackDetail,
-        r#"
-        SELECT id, contact, createTime AS create_time, `desc`, imgUrl AS img_url, stuId AS stu_id, status, comment
-        FROM feedbacks
-        WHERE id = ?
-        "#,
-        id
-    )
-    .fetch_optional(&get_db_pool().await)
-    .await?;
-    let feedback = feedback.map(|mut e| {
-        e.create_time = utils::convert_utc_to_utc8(e.create_time);
-        e
-    });
-    Ok(feedback)
-}
-
-#[allow(dead_code)]
-// 要使用工作台的 api 来更新，这样能够给用户有个消息推送
-pub async fn update_feedback_status(
-    id: u32,
-    status: FeedbackStatus,
-    comment: Option<String>,
-) -> Result<()> {
-    sqlx::query!(
-        r#"
-        UPDATE feedbacks
-        SET status = ?, comment = ?
-        WHERE id = ?
-        "#,
-        i8::from(status),
-        comment,
-        id
-    )
-    .execute(&get_db_pool().await)
-    .await?;
-    Ok(())
-}
-
-pub async fn get_feedback_count(status: &FeedbackStatus) -> Result<u32> {
-    let count = sqlx::query_scalar!(
-        r#"
-        SELECT COUNT(*) as count
-        FROM feedbacks
-        WHERE status = ?
-        "#,
-        i8::from(*status),
-    )
-    .fetch_one(&get_db_pool().await)
-    .await?;
-    Ok(count as u32)
-}
-
 pub async fn get_fast_reply_list() -> Result<Vec<(String, String)>> {
-    let replies = sqlx::query!(
+    let rows = sqlx::query!(
         r#"
         SELECT id, content
         FROM fast_reply
         "#
     )
     .fetch_all(&get_db_pool().await)
-    .await?
-    .into_iter()
-    .map(|record| (record.id, record.content))
-    .collect();
+    .await?;
+    
+    let replies = rows
+        .into_iter()
+        .filter_map(|row| row.id.map(|id| (id, row.content)))
+        .collect();
     Ok(replies)
 }
 
@@ -161,7 +76,7 @@ pub async fn update_fast_reply(id: &str, content: &str) -> Result<()> {
         INSERT INTO fast_reply
         (id, content)
         VALUES (?, ?)
-        ON DUPLICATE KEY UPDATE content = ?
+        ON CONFLICT(id) DO UPDATE SET content = ?
         "#,
         id,
         content,
@@ -186,9 +101,9 @@ pub async fn delete_fast_reply(id: &str) -> Result<()> {
 }
 
 pub async fn get_feedback_id_by_msg(msg_id: i64) -> Result<Option<u32>> {
-    let feedback_id = sqlx::query_scalar!(
+    let feedback_id = sqlx::query!(
         r#"
-        SELECT id
+        SELECT feedback_id
         FROM feedbacks
         WHERE qqbot_msg_id = ?
         "#,
@@ -196,5 +111,304 @@ pub async fn get_feedback_id_by_msg(msg_id: i64) -> Result<Option<u32>> {
     )
     .fetch_optional(&get_db_pool().await)
     .await?;
-    Ok(feedback_id.map(|id| id as u32))
+    Ok(feedback_id.and_then(|row| row.feedback_id.map(|id| id as u32)))
+}
+
+pub async fn update_feedback_msg_id(feedback_id: u32, msg_id: i32) -> Result<()> {
+    sqlx::query!(
+        r#"
+        INSERT INTO feedbacks (feedback_id, qqbot_msg_id)
+        VALUES (?, ?)
+        "#,
+        feedback_id,
+        msg_id
+    )
+    .execute(&get_db_pool().await)
+    .await?;
+    Ok(())
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+    use kovi::tokio;
+    use sqlx::sqlite::{SqliteConnectOptions, SqlitePoolOptions};
+    use std::str::FromStr;
+
+    /// 创建测试用的数据库连接池
+    async fn create_test_pool() -> SqlitePool {
+        let options = SqliteConnectOptions::from_str("sqlite::memory:")
+            .unwrap()
+            .create_if_missing(true);
+
+        let pool = SqlitePoolOptions::new()
+            .max_connections(5)
+            .connect_with(options)
+            .await
+            .expect("Failed to create test pool");
+
+        // 创建表结构
+        sqlx::query(
+            r#"
+            CREATE TABLE IF NOT EXISTS fast_reply (
+                id TEXT PRIMARY KEY,
+                content TEXT NOT NULL,
+                created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
+                updated_at DATETIME DEFAULT CURRENT_TIMESTAMP
+            );
+            "#
+        )
+        .execute(&pool)
+        .await
+        .expect("Failed to create fast_reply table");
+
+        sqlx::query(
+            r#"
+            CREATE TABLE IF NOT EXISTS feedbacks (
+                feedback_id INTEGER UNSIGNED,
+                qqbot_msg_id INTEGER UNSIGNED
+            );
+            "#
+        )
+        .execute(&pool)
+        .await
+        .expect("Failed to create feedbacks table");
+
+        pool
+    }
+
+    /// 为测试注入临时的数据库池
+    async fn with_test_pool<F, Fut>(test: F)
+    where
+        F: FnOnce(SqlitePool) -> Fut,
+        Fut: std::future::Future<Output = ()>,
+    {
+        let pool = create_test_pool().await;
+        test(pool).await;
+    }
+
+
+
+
+
+    
+    #[tokio::test]
+    async fn test_update_and_get_fast_reply() {
+        with_test_pool(|pool| async move {
+            // 测试插入新的 fast_reply
+            update_fast_reply_with_pool(&pool, "test_id", "test_content")
+                .await
+                .expect("Failed to insert fast_reply");
+
+            // 测试获取内容
+            let content = get_fast_reply_content_with_pool(&pool, "test_id")
+                .await
+                .expect("Failed to get fast_reply");
+            assert_eq!(content, Some("test_content".to_string()));
+
+            // 测试更新已存在的 fast_reply
+            update_fast_reply_with_pool(&pool, "test_id", "updated_content")
+                .await
+                .expect("Failed to update fast_reply");
+
+            let content = get_fast_reply_content_with_pool(&pool, "test_id")
+                .await
+                .expect("Failed to get updated fast_reply");
+            assert_eq!(content, Some("updated_content".to_string()));
+
+            // 测试获取不存在的 id
+            let content = get_fast_reply_content_with_pool(&pool, "non_existent")
+                .await
+                .expect("Failed to query");
+            assert_eq!(content, None);
+        }).await;
+    }
+
+    #[tokio::test]
+    async fn test_get_fast_reply_list() {
+        with_test_pool(|pool| async move {
+            // 插入多条数据
+            update_fast_reply_with_pool(&pool, "id1", "content1")
+                .await
+                .expect("Failed to insert");
+            update_fast_reply_with_pool(&pool, "id2", "content2")
+                .await
+                .expect("Failed to insert");
+            update_fast_reply_with_pool(&pool, "id3", "content3")
+                .await
+                .expect("Failed to insert");
+
+            // 获取列表
+            let list = get_fast_reply_list_with_pool(&pool)
+                .await
+                .expect("Failed to get list");
+
+            assert_eq!(list.len(), 3);
+            assert!(list.contains(&(String::from("id1"), String::from("content1"))));
+            assert!(list.contains(&(String::from("id2"), String::from("content2"))));
+            assert!(list.contains(&(String::from("id3"), String::from("content3"))));
+        }).await;
+    }
+
+    #[tokio::test]
+    async fn test_delete_fast_reply() {
+        with_test_pool(|pool| async move {
+            // 插入数据
+            update_fast_reply_with_pool(&pool, "to_delete", "content")
+                .await
+                .expect("Failed to insert");
+
+            // 确认数据存在
+            let content = get_fast_reply_content_with_pool(&pool, "to_delete")
+                .await
+                .expect("Failed to get");
+            assert_eq!(content, Some("content".to_string()));
+
+            // 删除数据
+            delete_fast_reply_with_pool(&pool, "to_delete")
+                .await
+                .expect("Failed to delete");
+
+            // 确认数据已删除
+            let content = get_fast_reply_content_with_pool(&pool, "to_delete")
+                .await
+                .expect("Failed to get");
+            assert_eq!(content, None);
+
+            // 删除不存在的数据不应该报错
+            delete_fast_reply_with_pool(&pool, "non_existent")
+                .await
+                .expect("Deleting non-existent should not error");
+        }).await;
+    }
+
+    #[tokio::test]
+    async fn test_feedback_operations() {
+        with_test_pool(|pool| async move {
+            // 测试插入 feedback
+            update_feedback_msg_id_with_pool(&pool, 1, 12345)
+                .await
+                .expect("Failed to insert feedback");
+
+            // 测试获取 feedback_id
+            let feedback_id = get_feedback_id_by_msg_with_pool(&pool, 12345)
+                .await
+                .expect("Failed to get feedback_id");
+            assert_eq!(feedback_id, Some(1));
+
+            // 测试获取不存在的 feedback
+            let feedback_id = get_feedback_id_by_msg_with_pool(&pool, 99999)
+                .await
+                .expect("Failed to query");
+            assert_eq!(feedback_id, None);
+
+            // 测试插入多个 feedback
+            update_feedback_msg_id_with_pool(&pool, 2, 12346)
+                .await
+                .expect("Failed to insert");
+            update_feedback_msg_id_with_pool(&pool, 3, 12347)
+                .await
+                .expect("Failed to insert");
+
+            let feedback_id = get_feedback_id_by_msg_with_pool(&pool, 12346)
+                .await
+                .expect("Failed to get");
+            assert_eq!(feedback_id, Some(2));
+
+            let feedback_id = get_feedback_id_by_msg_with_pool(&pool, 12347)
+                .await
+                .expect("Failed to get");
+            assert_eq!(feedback_id, Some(3));
+        }).await;
+    }
+
+    // 辅助函数：使用自定义池的版本
+    async fn get_fast_reply_list_with_pool(pool: &SqlitePool) -> Result<Vec<(String, String)>> {
+        let rows = sqlx::query!(
+            r#"
+            SELECT id, content
+            FROM fast_reply
+            "#
+        )
+        .fetch_all(pool)
+        .await?;
+        
+        let replies = rows
+            .into_iter()
+            .filter_map(|row| row.id.map(|id| (id, row.content)))
+            .collect();
+        Ok(replies)
+    }
+
+    async fn get_fast_reply_content_with_pool(pool: &SqlitePool, id: &str) -> Result<Option<String>> {
+        let content = sqlx::query_scalar!(
+            r#"
+            SELECT content
+            FROM fast_reply
+            WHERE id = ?
+            "#,
+            id
+        )
+        .fetch_optional(pool)
+        .await?;
+        Ok(content)
+    }
+
+    async fn update_fast_reply_with_pool(pool: &SqlitePool, id: &str, content: &str) -> Result<()> {
+        sqlx::query!(
+            r#"
+            INSERT INTO fast_reply
+            (id, content)
+            VALUES (?, ?)
+            ON CONFLICT(id) DO UPDATE SET content = ?
+            "#,
+            id,
+            content,
+            content
+        )
+        .execute(pool)
+        .await?;
+        Ok(())
+    }
+
+    async fn delete_fast_reply_with_pool(pool: &SqlitePool, id: &str) -> Result<()> {
+        sqlx::query!(
+            r#"
+            DELETE FROM fast_reply
+            WHERE id = ?
+            "#,
+            id
+        )
+        .execute(pool)
+        .await?;
+        Ok(())
+    }
+
+    async fn get_feedback_id_by_msg_with_pool(pool: &SqlitePool, msg_id: i64) -> Result<Option<u32>> {
+        let feedback_id = sqlx::query!(
+            r#"
+            SELECT feedback_id
+            FROM feedbacks
+            WHERE qqbot_msg_id = ?
+            "#,
+            msg_id
+        )
+        .fetch_optional(pool)
+        .await?;
+        Ok(feedback_id.and_then(|row| row.feedback_id.map(|id| id as u32)))
+    }
+
+    async fn update_feedback_msg_id_with_pool(pool: &SqlitePool, feedback_id: u32, msg_id: i64) -> Result<()> {
+        sqlx::query!(
+            r#"
+            INSERT INTO feedbacks (feedback_id, qqbot_msg_id)
+            VALUES (?, ?)
+            "#,
+            feedback_id,
+            msg_id
+        )
+        .execute(pool)
+        .await?;
+        Ok(())
+    }
 }

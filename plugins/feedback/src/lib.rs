@@ -10,11 +10,11 @@ use std::sync::Arc;
 
 use kovi::{Message, PluginBuilder as plugin, RuntimeBot, futures_util::StreamExt};
 use lapin::{
-    options::{BasicAckOptions, BasicConsumeOptions},
+    options::BasicConsumeOptions,
     types::FieldTable,
 };
 
-use crate::{config::CFG, database::get_db_pool, entities::RabbitFeedbackMessage};
+use crate::{config::CFG, entities::RabbitFeedbackMessage};
 
 #[kovi::plugin]
 async fn main() {
@@ -115,22 +115,16 @@ async fn listen_feedback(bot: Arc<RuntimeBot>) {
             .await
         {
             Ok(msg_id) => {
-                let res = sqlx::query!(
-                    r#"
-                    UPDATE feedbacks SET qqbot_msg_id = ? WHERE id = ?
-                    "#,
-                    msg_id,
-                    feedback.id
-                )
-                .execute(&get_db_pool().await)
-                .await;
-                if let Err(e) = res {
-                    tracing::error!("更新反馈消息的 qqbot_msg_id 失败: {:?}", e);
-                } else {
-                    delivery
-                        .ack(BasicAckOptions::default())
-                        .await
-                        .expect("ack 失败");
+                match database::update_feedback_msg_id(feedback.id as u32, msg_id).await {
+                    Ok(_) => {
+                        delivery
+                            .ack(lapin::options::BasicAckOptions::default())
+                            .await
+                            .expect("ack 失败");
+                    }
+                    Err(e) => {
+                        tracing::error!("插入反馈消息的 qqbot_msg_id 失败: {:?}", e);
+                    }
                 }
             }
             Err(e) => {

@@ -32,14 +32,15 @@ pub struct Database {
     pub max_connections: u32,
 }
 
-#[derive(Deserialize, Debug)]
+#[derive(Deserialize, Debug, Clone)]
 pub struct YQWork {
-    pub token: String,
+    pub uid: u32,
+    pub secret: String,
     pub url: String,
 }
 
 fn init() -> Configs {
-    let mut file = File::open("config.toml").expect("读取配置文件失败");
+    let mut file = File::open( if cfg!(test) {"../../config.toml"} else {"config.toml"}).expect("读取配置文件失败");
     let mut contents = String::new();
     file.read_to_string(&mut contents)
         .expect("读取配置文件失败");

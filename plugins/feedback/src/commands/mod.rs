@@ -32,6 +32,7 @@ const COMMANDS: Lazy<Vec<Arc<dyn CommandHandler>>> = Lazy::new(|| {
         Arc::new(handler::feedback::FeedbackListCommand),
         Arc::new(handler::feedback::FeedbackImageCommand),
         Arc::new(handler::feedback::FeedbackDetailCommand),
+        Arc::new(handler::feedback::FeedbackReplyCommand),
         Arc::new(handler::feedback::FeedbackConfirmCommand),
         Arc::new(handler::feedback::FeedbackResolveCommand),
         Arc::new(handler::fast_reply::FastReplyListCommand),

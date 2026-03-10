@@ -1,2 +1,5 @@
 /target
 /data/
+feedback.db
+feedback.db-shm
+feedback.db-wal

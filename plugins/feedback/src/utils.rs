@@ -1,12 +1,10 @@
-use chrono::{FixedOffset, NaiveDateTime, TimeZone, Utc};
-
 use crate::entities::FeedbackDetail;
 
 pub fn format_feedback_summary(feedback: &FeedbackDetail) -> String {
     let mut s = format!(
         "#{}({})\n学号：{}\n时间：{}\n描述：{}",
         feedback.id,
-        if feedback.comment.is_none() {
+        if feedback.msgs.is_empty() {
             "未回复"
         } else {
             "已回复"
@@ -22,35 +20,35 @@ pub fn format_feedback_summary(feedback: &FeedbackDetail) -> String {
 }
 
 pub fn format_feedback_detail(feedback: &FeedbackDetail) -> String {
-    format!(
-        "#{} \n学号：{}\n时间：{}\n描述：{}\n\n回复：{}{}",
+    let mut s = format!(
+        "#{} \n学号：{}\n时间：{}\n描述：{}",
         feedback.id,
         feedback.stu_id.as_ref().unwrap_or(&"未提供".to_string()),
         feedback.create_time.format("%Y-%m-%d %H:%M:%S"),
-        feedback.desc,
-        feedback.comment.as_ref().unwrap_or(&"(未回复)".to_string()),
-        if feedback.img_url.is_some() {
-            "\n\n（含有图片）"
-        } else {
-            ""
+        feedback.desc
+    );
+
+    // 添加回复列表
+    if !feedback.msgs.is_empty() {
+        s.push_str("\n\n--- 回复列表 ---");
+        for msg in &feedback.msgs {
+            let typ = "回复";
+            s.push_str(&format!(
+                "\n[{}] {}: {}",
+                typ,
+                msg.created_at.format("%Y-%m-%d %H:%M"),
+                msg.msg.as_deref().unwrap_or("")
+            ));
         }
-    )
-}
+    } else {
+        s.push_str("\n\n回复：(无)");
+    }
 
-/// %Y-%m-%d %H:%M:%S，时区为 UTC+8
-pub fn get_now_time() -> String {
-    let utc_now = chrono::Utc::now();
-    let utc_plus_8 = chrono::FixedOffset::east_opt(8 * 3600).unwrap();
-    let now = utc_now.with_timezone(&utc_plus_8);
-    now.format("%Y-%m-%d %H:%M:%S").to_string()
-}
+    if feedback.img_url.is_some() {
+        s.push_str("\n\n（含有图片）");
+    }
 
-/// 将 UTC 时间转为 UTC+8 时间
-/// 目前数据库里存放的时间都是 UTC 时间
-pub fn convert_utc_to_utc8(utc_time: NaiveDateTime) -> NaiveDateTime {
-    let utc_dt = Utc.from_utc_datetime(&utc_time);
-    let utc8_offset = FixedOffset::east_opt(8 * 3600).unwrap();
-    utc_dt.with_timezone(&utc8_offset).naive_local()
+    s
 }
 
 /// 将字符串压缩到指定长度，超出部分用 "..." 代替
