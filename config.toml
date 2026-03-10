@@ -1,16 +1,16 @@
 [rabbitmq]
 url = "amqp://用户名:密码@ip地址:端口/VirtualHost" # VirtualHost 需要 URL 编码，如 / 编码为 %2F
-feedback_queue = "feedback.qqrobot"       # 在哪个队列上接收反馈消息
+feedback_queue = "feedback.qqrobot"               # 在哪个队列上接收反馈消息
 
 [database]
-max_connections = 5  # SQLite 建议使用较小的连接数，通常 5-10 足够
-database_url = "sqlite:feedback.db"  # SQLite 数据库文件路径，会自动创建
+max_connections = 5
+database_url = "sqlite:feedback.db"  # SQLite 数据库文件路径
 
 [feedback]
 admin_qq = [""] # 管理员 QQ 号列表
 group_id = ""   # 机器人响应哪个群
 
 [yqwork]
-uid = 0                                      # bot的用户ID
-secret = ""                                  # JWT密钥
-url = "https://api.work.qnxg.cn"             # 末尾不用添加 /
+uid = 0                            # bot的用户ID
+secret = ""                        # JWT密钥
+url = "https://api.work.qnxg.cn"   # 末尾不用添加 /
