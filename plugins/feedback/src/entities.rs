@@ -47,12 +47,8 @@ pub struct ApiResponse<T> {
     pub data: T,
 }
 
-pub type FeedbackListResponse = ApiResponse<FeedbackListData>;
-pub type FeedbackResponse = ApiResponse<Option<FeedbackDetail>>;
-pub type FeedbackMsgListResponse = ApiResponse<Vec<FeedbackMsg>>;
-
 #[derive(Deserialize)]
-pub struct FeedbackListData {
+pub struct FeedbackList {
     pub rows: Vec<FeedbackDetail>,
     pub count: u32,
 }

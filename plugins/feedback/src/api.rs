@@ -1,8 +1,14 @@
-use crate::entities::{FeedbackDetail, FeedbackListResponse, FeedbackMsg, FeedbackMsgListResponse, FeedbackResponse, FeedbackStatus};
+use crate::entities::{
+    FeedbackDetail,
+    FeedbackList,
+    FeedbackMsg,
+    FeedbackStatus
+};
+use crate::entities::ApiResponse;
 use anyhow::Result;
 use jsonwebtoken::{decode, DecodingKey, EncodingKey, Header, Validation};
 use once_cell::sync::Lazy;
-use reqwest::{Client, redirect::Policy};
+use reqwest::{Client, Method, redirect::Policy};
 use serde::{Deserialize, Serialize};
 use serde_json::json;
 use std::sync::Arc;
@@ -18,12 +24,10 @@ struct Payload {
     exp: usize,
 }
 
-// Token 缓存
 static TOKEN_CACHE: Lazy<Arc<RwLock<String>>> = Lazy::new(|| {
     Arc::new(RwLock::new(generate_token()))
 });
 
-// 生成新 token
 fn generate_token() -> String {
     let now = SystemTime::now()
         .duration_since(UNIX_EPOCH)
@@ -78,8 +82,11 @@ pub static CLIENT: Lazy<Client> = Lazy::new(|| {
         .unwrap()
 });
 
-// 统一请求函数，自动添加 token
-async fn request(method: reqwest::Method, url: &str, body: Option<serde_json::Value>) -> Result<reqwest::Response> {
+// 统一请求函数，自动添加 token 并从 ApiResponse 中提取数据
+// GET 返回 Some(data)，POST/PUT/DELETE 返回 None
+async fn request<T: for<'de> Deserialize<'de>>(method: Method, url: &str, body: Option<serde_json::Value>) -> Result<Option<T>> {
+    let is_get = &method == &Method::GET;
+
     let token = get_token().await;
     let mut req = CLIENT.request(method, url).header("Authorization", token);
 
@@ -87,7 +94,14 @@ async fn request(method: reqwest::Method, url: &str, body: Option<serde_json::Va
         req = req.json(&json);
     }
 
-    req.send().await.map_err(anyhow::Error::from)
+    let res = req.send().await?;
+
+    if is_get {
+        let response: ApiResponse<T> = res.json().await?;
+        Ok(Some(response.data))
+    } else {
+        Ok(None)
+    }
 }
 
 pub async fn get_feedback_list(
@@ -96,43 +110,31 @@ pub async fn get_feedback_list(
     page_size: u32,
 ) -> Result<Vec<FeedbackDetail>> {
     let url = format!("{}/feedback?status={}&page={}&pageSize={}", CFG.yqwork.url, (*status) as i8, page, page_size);
-    let res = request(reqwest::Method::GET, &url, None)
-        .await?
-        .json::<FeedbackListResponse>()
-        .await?;
-    Ok(res.data.rows)
+    let res: FeedbackList = request(Method::GET, &url, None).await?.unwrap();
+    Ok(res.rows)
 }
 
 pub async fn get_feedback_detail(id: u32) -> Result<Option<FeedbackDetail>> {
     let url = format!("{}/feedback/{}", CFG.yqwork.url, id);
-    let mut res = request(reqwest::Method::GET, &url, None)
-        .await?
-        .json::<FeedbackResponse>()
-        .await?;
+    let mut res: Option<FeedbackDetail> = request(Method::GET, &url, None).await?.and_then(|x| x);
 
-    if let Some(feedback) = &mut res.data {
+    if let Some(feedback) = &mut res {
         feedback.msgs = get_feedback_msg_list(id).await?;
     }
 
-    Ok(res.data)
+    Ok(res)
 }
 
 pub async fn get_feedback_msg_list(feedback_id: u32) -> Result<Vec<FeedbackMsg>> {
     let url = format!("{}/feedback/{}/msg", CFG.yqwork.url, feedback_id);
-    let res = request(reqwest::Method::GET, &url, None)
-        .await?
-        .json::<FeedbackMsgListResponse>()
-        .await?;
-    Ok(res.data)
+    let res: Vec<FeedbackMsg> = request(Method::GET, &url, None).await?.unwrap();
+    Ok(res)
 }
 
 pub async fn get_feedback_count(status: &FeedbackStatus) -> Result<u32> {
     let url = format!("{}/feedback?status={}&page=1&pageSize=0", CFG.yqwork.url, (*status) as i8);
-    let res = request(reqwest::Method::GET, &url, None)
-        .await?
-        .json::<FeedbackListResponse>()
-        .await?;
-    Ok(res.data.count)
+    let res: FeedbackList = request(Method::GET, &url, None).await?.unwrap();
+    Ok(res.count)
 }
 
 pub async fn add_feedback_msg(
@@ -145,7 +147,7 @@ pub async fn add_feedback_msg(
         "msg": msg
     });
 
-    request(reqwest::Method::POST, &url, Some(body)).await?;
+    request::<()>(Method::POST, &url, Some(body)).await?;
 
     Ok(())
 }
@@ -162,7 +164,7 @@ pub async fn update_feedback_status(
                 "status": i8::from(status),
             });
 
-            request(reqwest::Method::PUT, &url, Some(body)).await?;
+            request::<()>(Method::PUT, &url, Some(body)).await?;
         }
     }
 
