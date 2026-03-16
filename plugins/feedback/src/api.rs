@@ -84,7 +84,7 @@ async fn request<T: for<'de> Deserialize<'de>>(
     url: &str,
     body: Option<serde_json::Value>,
 ) -> Result<Option<T>> {
-    let is_get = &method == &Method::GET;
+    let is_get = method == Method::GET;
 
     let token = get_token().await;
     let mut req = CLIENT.request(method, url).header("Authorization", token);
@@ -159,8 +159,8 @@ pub async fn add_feedback_msg(feedback_id: u32, msg: String) -> Result<()> {
 }
 
 pub async fn update_feedback_status(feedback_id: u32, status: FeedbackStatus) -> Result<()> {
-    if let Some(feedback_detail) = get_feedback_detail(feedback_id).await? {
-        if feedback_detail.status as i8 != status as i8 {
+    if let Some(feedback_detail) = get_feedback_detail(feedback_id).await?
+        && feedback_detail.status as i8 != status as i8 {
             let url = format!("{}/feedback/{}", CFG.yqwork.url, feedback_id);
 
             let body = json!({
@@ -169,7 +169,6 @@ pub async fn update_feedback_status(feedback_id: u32, status: FeedbackStatus) ->
 
             request::<()>(Method::PUT, &url, Some(body)).await?;
         }
-    }
 
     Ok(())
 }

@@ -33,10 +33,7 @@ async fn main() {
             for item in event.message.iter() {
                 match item.type_.as_str() {
                     "reply" => {
-                        target = item.data["id"]
-                            .as_str()
-                            .map(|s| s.parse::<i64>().ok())
-                            .flatten();
+                        target = item.data["id"].as_str().and_then(|s| s.parse::<i64>().ok());
                         body.push(' ');
                     }
                     "at" => {
@@ -46,7 +43,7 @@ async fn main() {
                         body.push(' ');
                     }
                     "text" => {
-                        body.push_str(&item.data["text"].as_str().unwrap_or(""));
+                        body.push_str(item.data["text"].as_str().unwrap_or(""));
                     }
                     _ => {}
                 }
@@ -104,8 +101,8 @@ async fn listen_feedback(bot: Arc<RuntimeBot>) {
             feedback.stu_id.unwrap_or("未提供".to_string()),
             feedback.desc
         );
-        if let Some(_) = &feedback.img_url {
-            msg.push_str(&format!("\n（含有图片）"));
+        if feedback.img_url.is_some() {
+            msg.push_str("\n（含有图片）");
         }
         match bot
             .send_group_msg_return(CFG.feedback.group_id.parse().unwrap(), msg)

@@ -33,13 +33,7 @@ impl<'a> CommandContext<'a> {
     }
 
     pub fn next_fast_reply_id(&mut self) -> Option<&'a str> {
-        self.next_token().and_then(|s| {
-            if s.starts_with('#') {
-                Some(s[1..].as_ref())
-            } else {
-                None
-            }
-        })
+        self.next_token().and_then(|s| s.strip_prefix('#'))
     }
 
     pub fn get_content(self) -> Option<String> {
@@ -56,9 +50,9 @@ impl<'a> CommandContext<'a> {
         if let Some(next) = next {
             if next.starts_with('#') {
                 if let Some(fast_reply_id) = next.get(1..) {
-                    return Ok(database::get_fast_reply_content(fast_reply_id).await?);
+                    return database::get_fast_reply_content(fast_reply_id).await;
                 } else {
-                    return Ok(None);
+                    Ok(None)
                 }
             } else {
                 let mut content: String = String::from(next);
@@ -67,9 +61,9 @@ impl<'a> CommandContext<'a> {
                     content.push_str(arg);
                 }
                 if content.is_empty() {
-                    return Ok(None);
+                    Ok(None)
                 } else {
-                    return Ok(Some(content));
+                    Ok(Some(content))
                 }
             }
         } else {

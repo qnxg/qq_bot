@@ -26,7 +26,7 @@ pub async fn parse_command<'a>(
     }
 }
 
-const COMMANDS: Lazy<Vec<Arc<dyn CommandHandler>>> = Lazy::new(|| {
+static COMMANDS: Lazy<Vec<Arc<dyn CommandHandler>>> = Lazy::new(|| {
     vec![
         Arc::new(handler::misc::HelperCommand),
         Arc::new(handler::feedback::FeedbackListCommand),

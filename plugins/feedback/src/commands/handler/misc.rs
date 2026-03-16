@@ -6,7 +6,7 @@ use anyhow::Result;
 use async_trait::async_trait;
 use kovi::Message;
 
-const TIPS: &'static str = r#"
+const TIPS: &str = r#"
 注：必须 @ 机器人，且在指定反馈群内才会处理消息。
 注：问题 id 参数可以通过回复消息或是直接指定获得。
 "#;
@@ -25,7 +25,7 @@ impl CommandHandler for HelperCommand {
     async fn handle_command<'a>(&self, _ctx: CommandContext<'a>) -> Result<Option<Message>> {
         let command_list = COMMANDS
             .iter()
-            .map(|item| format!("{}", item.command_usage()))
+            .map(|item| item.command_usage().to_string())
             .collect::<Vec<String>>()
             .join("\n");
         Ok(Some(Message::new().add_text(format!(
