@@ -93,7 +93,7 @@ pub struct FeedbackDetail {
     pub id: i32,
     #[allow(unused)]
     pub contact: Option<String>,
-   #[serde(rename = "createdAt")]
+    #[serde(rename = "createdAt")]
     pub create_time: chrono::NaiveDateTime,
     pub desc: String,
     #[serde(rename = "imgUrl")]
@@ -117,4 +117,3 @@ pub struct RabbitFeedbackMessage {
     pub img_url: Option<String>,
     pub id: u64,
 }
-

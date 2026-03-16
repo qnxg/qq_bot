@@ -187,14 +187,14 @@ impl CommandHandler for FeedbackListCommand {
         let page = ctx.next_number().unwrap_or(1).max(1) as u32;
         let per_page = ctx.next_number().unwrap_or(5).clamp(1, 20) as u32;
         let total_count = api::get_feedback_count(&status).await?;
-        let total_pages = (total_count + per_page - 1) / per_page;
+        let total_pages = total_count.div_ceil(per_page);
         let feedbacks = api::get_feedback_list(&status, page, per_page).await?;
         if feedbacks.is_empty() {
             return Ok(Some(Message::new().add_text("没有找到符合条件的反馈。")));
         }
         let mut msg = feedbacks
             .iter()
-            .map(|feedback| utils::format_feedback_summary(feedback))
+            .map(utils::format_feedback_summary)
             .collect::<Vec<_>>()
             .join("\n\n");
         msg.push_str(&format!(

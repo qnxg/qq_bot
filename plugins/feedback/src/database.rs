@@ -48,7 +48,7 @@ pub async fn get_fast_reply_list() -> Result<Vec<(String, String)>> {
     )
     .fetch_all(&get_db_pool().await)
     .await?;
-    
+
     let replies = rows
         .into_iter()
         .filter_map(|row| row.id.map(|id| (id, row.content)))
@@ -156,7 +156,7 @@ mod tests {
                 created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
                 updated_at DATETIME DEFAULT CURRENT_TIMESTAMP
             );
-            "#
+            "#,
         )
         .execute(&pool)
         .await
@@ -168,7 +168,7 @@ mod tests {
                 feedback_id INTEGER UNSIGNED,
                 qqbot_msg_id INTEGER UNSIGNED
             );
-            "#
+            "#,
         )
         .execute(&pool)
         .await
@@ -187,11 +187,6 @@ mod tests {
         test(pool).await;
     }
 
-
-
-
-
-    
     #[tokio::test]
     async fn test_update_and_get_fast_reply() {
         with_test_pool(|pool| async move {
@@ -221,7 +216,8 @@ mod tests {
                 .await
                 .expect("Failed to query");
             assert_eq!(content, None);
-        }).await;
+        })
+        .await;
     }
 
     #[tokio::test]
@@ -247,7 +243,8 @@ mod tests {
             assert!(list.contains(&(String::from("id1"), String::from("content1"))));
             assert!(list.contains(&(String::from("id2"), String::from("content2"))));
             assert!(list.contains(&(String::from("id3"), String::from("content3"))));
-        }).await;
+        })
+        .await;
     }
 
     #[tokio::test]
@@ -279,7 +276,8 @@ mod tests {
             delete_fast_reply_with_pool(&pool, "non_existent")
                 .await
                 .expect("Deleting non-existent should not error");
-        }).await;
+        })
+        .await;
     }
 
     #[tokio::test]
@@ -319,7 +317,8 @@ mod tests {
                 .await
                 .expect("Failed to get");
             assert_eq!(feedback_id, Some(3));
-        }).await;
+        })
+        .await;
     }
 
     // 辅助函数：使用自定义池的版本
@@ -332,7 +331,7 @@ mod tests {
         )
         .fetch_all(pool)
         .await?;
-        
+
         let replies = rows
             .into_iter()
             .filter_map(|row| row.id.map(|id| (id, row.content)))
@@ -340,7 +339,10 @@ mod tests {
         Ok(replies)
     }
 
-    async fn get_fast_reply_content_with_pool(pool: &SqlitePool, id: &str) -> Result<Option<String>> {
+    async fn get_fast_reply_content_with_pool(
+        pool: &SqlitePool,
+        id: &str,
+    ) -> Result<Option<String>> {
         let content = sqlx::query_scalar!(
             r#"
             SELECT content
@@ -384,7 +386,10 @@ mod tests {
         Ok(())
     }
 
-    async fn get_feedback_id_by_msg_with_pool(pool: &SqlitePool, msg_id: i64) -> Result<Option<u32>> {
+    async fn get_feedback_id_by_msg_with_pool(
+        pool: &SqlitePool,
+        msg_id: i64,
+    ) -> Result<Option<u32>> {
         let feedback_id = sqlx::query!(
             r#"
             SELECT feedback_id
@@ -398,7 +403,11 @@ mod tests {
         Ok(feedback_id.and_then(|row| row.feedback_id.map(|id| id as u32)))
     }
 
-    async fn update_feedback_msg_id_with_pool(pool: &SqlitePool, feedback_id: u32, msg_id: i64) -> Result<()> {
+    async fn update_feedback_msg_id_with_pool(
+        pool: &SqlitePool,
+        feedback_id: u32,
+        msg_id: i64,
+    ) -> Result<()> {
         sqlx::query!(
             r#"
             INSERT INTO feedbacks (feedback_id, qqbot_msg_id)
