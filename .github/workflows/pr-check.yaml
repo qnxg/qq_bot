@@ -1,0 +1,31 @@
+name: PR Check
+
+on:
+  push:
+    branches: ["master"]
+  pull_request:
+    branches: ["master"]
+
+jobs:
+  check:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+      - name: Setup SQLite
+        run: |
+          sudo apt-get update && sudo apt-get install -y sqlite3
+          sqlite3 feedback.db < init.sql
+      - name: Setup Toolchain
+        uses: actions-rust-lang/setup-rust-toolchain@v1
+        with:
+          toolchain: stable
+          target: x86_64-unknown-linux-musl
+          components: clippy, rustfmt
+          cache-all-crates: "true"
+      - name: Clippy
+        run: cargo clippy --all-targets -- -D warnings
+      - name: Test Documentation Items
+        run: cargo doc --document-private-items --no-deps
+      - name: Check Code Format
+        run: cargo fmt --check
