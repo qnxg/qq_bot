@@ -160,15 +160,16 @@ pub async fn add_feedback_msg(feedback_id: u32, msg: String) -> Result<()> {
 
 pub async fn update_feedback_status(feedback_id: u32, status: FeedbackStatus) -> Result<()> {
     if let Some(feedback_detail) = get_feedback_detail(feedback_id).await?
-        && feedback_detail.status as i8 != status as i8 {
-            let url = format!("{}/feedback/{}", CFG.yqwork.url, feedback_id);
+        && feedback_detail.status as i8 != status as i8
+    {
+        let url = format!("{}/feedback/{}", CFG.yqwork.url, feedback_id);
 
-            let body = json!({
-                "status": i8::from(status),
-            });
+        let body = json!({
+            "status": i8::from(status),
+        });
 
-            request::<()>(Method::PUT, &url, Some(body)).await?;
-        }
+        request::<()>(Method::PUT, &url, Some(body)).await?;
+    }
 
     Ok(())
 }
