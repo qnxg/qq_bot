@@ -9,10 +9,7 @@ mod utils;
 use std::sync::Arc;
 
 use kovi::{Message, PluginBuilder as plugin, RuntimeBot, futures_util::StreamExt};
-use lapin::{
-    options::BasicConsumeOptions,
-    types::FieldTable,
-};
+use lapin::{options::BasicConsumeOptions, types::FieldTable};
 
 use crate::{config::CFG, entities::RabbitFeedbackMessage};
 
