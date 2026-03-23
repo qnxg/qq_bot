@@ -207,3 +207,28 @@ impl CommandHandler for FeedbackListCommand {
         Ok(Some(Message::new().add_text(msg)))
     }
 }
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+    use crate::commands::framework::CommandContext;
+    use kovi::tokio;
+
+    #[tokio::test]
+    async fn test_resolve_command_with_reply() {
+        let handler = FeedbackResolveCommand;
+        // 测试参数：问题 id ，带回复内容
+        let args: Vec<&str> = vec!["-1", "这是一条测试回复"];
+        let ctx = CommandContext::new(Box::new(args.into_iter()), None);
+        let result = handler.handle_command(ctx).await.unwrap();
+        if let Some(msg) = result {
+            let text = msg
+                .iter()
+                .filter_map(|seg| seg.data.get("text").and_then(|v| v.as_str()))
+                .collect::<String>();
+            println!("=== ResolveCommand Output (with reply) ===");
+            println!("{}", text);
+            println!("===========================================");
+        }
+    }
+}
