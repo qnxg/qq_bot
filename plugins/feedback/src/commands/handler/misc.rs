@@ -35,3 +35,27 @@ impl CommandHandler for HelperCommand {
         ))))
     }
 }
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+    use crate::commands::framework::CommandContext;
+    use kovi::tokio;
+
+    #[tokio::test]
+    async fn test_helper_command() {
+        let handler = HelperCommand;
+        let ctx = CommandContext::new(Box::new(std::iter::empty()), None);
+        let result = handler.handle_command(ctx).await.unwrap();
+        if let Some(msg) = result {
+            let text = msg
+                .iter()
+                .filter_map(|seg| seg.data.get("text").and_then(|v| v.as_str()))
+                .collect::<Vec<_>>()
+                .join("");
+            println!("=== HelperCommand Output ===");
+            println!("{}", text);
+            println!("===========================");
+        }
+    }
+}
