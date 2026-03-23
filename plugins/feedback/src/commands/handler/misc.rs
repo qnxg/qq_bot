@@ -19,7 +19,7 @@ impl CommandHandler for HelperCommand {
     }
 
     fn command_usage(&self) -> &'static str {
-        "帮助: 查看帮助信息"
+        "帮助\n    查看帮助信息"
     }
 
     async fn handle_command<'a>(&self, _ctx: CommandContext<'a>) -> Result<Option<Message>> {
@@ -27,7 +27,7 @@ impl CommandHandler for HelperCommand {
             .iter()
             .map(|item| item.command_usage().to_string())
             .collect::<Vec<String>>()
-            .join("\n");
+            .join("\n\n");
         Ok(Some(Message::new().add_text(format!(
             "{}\n\n{}",
             command_list,

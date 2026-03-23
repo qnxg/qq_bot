@@ -16,7 +16,7 @@ impl CommandHandler for FeedbackDetailCommand {
     }
 
     fn command_usage(&self) -> &'static str {
-        "查看 <问题 id>：查看指定问题的详细信息"
+        "查看 <问题 id>\n    查看指定问题的详细信息"
     }
 
     async fn handle_command<'a>(&self, mut ctx: CommandContext<'a>) -> Result<Option<Message>> {
@@ -42,7 +42,7 @@ impl CommandHandler for FeedbackImageCommand {
     }
 
     fn command_usage(&self) -> &'static str {
-        "图片 <问题 id>：查看指定问题反馈的附加图片"
+        "图片 <问题 id>\n    查看指定问题反馈的附加图片"
     }
 
     async fn handle_command<'a>(&self, mut ctx: CommandContext<'a>) -> Result<Option<Message>> {
@@ -70,7 +70,7 @@ impl CommandHandler for FeedbackReplyCommand {
     }
 
     fn command_usage(&self) -> &'static str {
-        "回复 <问题 id> [...回复内容]/#[快捷回复id]： 给指定问题添加回复"
+        "回复 <问题 id> [...回复内容] / #[快捷回复id]\n    给指定问题添加回复"
     }
 
     async fn handle_command<'a>(&self, mut ctx: CommandContext<'a>) -> Result<Option<Message>> {
@@ -107,7 +107,7 @@ impl CommandHandler for FeedbackConfirmCommand {
     }
 
     fn command_usage(&self) -> &'static str {
-        "确认 <问题 id>： 标记问题为已确认"
+        "确认 <问题 id>\n    标记问题为已确认"
     }
 
     async fn handle_command<'a>(&self, mut ctx: CommandContext<'a>) -> Result<Option<Message>> {
@@ -140,7 +140,7 @@ impl CommandHandler for FeedbackResolveCommand {
     }
 
     fn command_usage(&self) -> &'static str {
-        "解决 <问题 id>： 标记问题为已解决"
+        "解决 <问题 id>\n    标记问题为已解决"
     }
 
     async fn handle_command<'a>(&self, mut ctx: CommandContext<'a>) -> Result<Option<Message>> {
@@ -173,7 +173,7 @@ impl CommandHandler for FeedbackListCommand {
     }
 
     fn command_usage(&self) -> &'static str {
-        "列表 [未确认/已确认/已解决] [页码] [每页个数]： 查看反馈列表，默认为未确认，第 1 页，每页 5 条"
+        "列表 [未确认/已确认/已解决] [页码] [每页个数]\n    查看反馈列表，默认为未确认，第 1 页，每页 5 条"
     }
 
     async fn handle_command<'a>(&self, mut ctx: CommandContext<'a>) -> Result<Option<Message>> {
