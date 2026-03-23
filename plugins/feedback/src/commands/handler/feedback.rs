@@ -140,7 +140,7 @@ impl CommandHandler for FeedbackResolveCommand {
     }
 
     fn command_usage(&self) -> &'static str {
-        "解决 <问题 id>\n    标记问题为已解决"
+        "解决 <问题 id> (可选->)[...回复内容] / #[快捷回复id]\n    标记问题为已解决，可选添加回复内容"
     }
 
     async fn handle_command<'a>(&self, mut ctx: CommandContext<'a>) -> Result<Option<Message>> {
@@ -149,6 +149,9 @@ impl CommandHandler for FeedbackResolveCommand {
             None => return Ok(Some(Message::new().add_text(self.command_usage()))),
         };
         if let Some(_feedback) = api::get_feedback_detail(feedback_id).await? {
+            if let Some(reply_content) = ctx.get_content_or_fast_reply().await? {
+                api::add_feedback_msg(feedback_id, reply_content).await?;
+            }
             api::update_feedback_status(feedback_id, FeedbackStatus::Resolved).await?;
             if let Some(feedback) = api::get_feedback_detail(feedback_id).await? {
                 Ok(Some(
