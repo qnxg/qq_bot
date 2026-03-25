@@ -140,7 +140,7 @@ impl CommandHandler for FeedbackResolveCommand {
     }
 
     fn command_usage(&self) -> &'static str {
-        "解决 <问题 id> (可选->)[...回复内容] / #[快捷回复id]\n    标记问题为已解决，可选添加回复内容"
+        "解决 <问题 id> [...回复内容] / #[快捷回复id]\n    标记问题为已解决，可选添加回复内容"
     }
 
     async fn handle_command<'a>(&self, mut ctx: CommandContext<'a>) -> Result<Option<Message>> {
