@@ -14,7 +14,7 @@ impl CommandHandler for FastReplyListCommand {
     }
 
     fn command_usage(&self) -> &'static str {
-        "回复列表：获取快捷回复列表"
+        "回复列表\n    获取快捷回复列表"
     }
 
     async fn handle_command<'a>(&self, _ctx: CommandContext<'a>) -> Result<Option<Message>> {
@@ -44,7 +44,7 @@ impl CommandHandler for FastReplyUpdateCommand {
     }
 
     fn command_usage(&self) -> &'static str {
-        "回复更新 #<快捷回复id> <...快捷回复内容>：添加/更新快捷回复"
+        "回复更新 #<快捷回复id> <...快捷回复内容>\n    添加/更新快捷回复"
     }
 
     async fn handle_command<'a>(&self, mut ctx: CommandContext<'a>) -> Result<Option<Message>> {
@@ -69,7 +69,7 @@ impl CommandHandler for FastReplyDeleteCommand {
     }
 
     fn command_usage(&self) -> &'static str {
-        "回复删除 #<快捷回复id>：删除快捷回复"
+        "回复删除 #<快捷回复id>\n    删除快捷回复"
     }
 
     async fn handle_command<'a>(&self, mut ctx: CommandContext<'a>) -> Result<Option<Message>> {
@@ -94,7 +94,7 @@ impl CommandHandler for FastReplyDetailCommand {
     }
 
     fn command_usage(&self) -> &'static str {
-        "回复详情 #<快捷回复id>：查看快捷回复详情"
+        "回复详情 #<快捷回复id>\n    查看快捷回复详情"
     }
 
     async fn handle_command<'a>(&self, mut ctx: CommandContext<'a>) -> Result<Option<Message>> {
