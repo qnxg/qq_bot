@@ -1,3 +1,12 @@
+[feedback]
+enable_on_startup = true
+access_control = false
+list_mode = "WhiteList"
+
+[feedback.access_list]
+friends = []
+groups = []
+
 [kovi-plugin-cmd]
 enable_on_startup = true
 access_control = false
@@ -7,11 +16,11 @@ list_mode = "WhiteList"
 friends = []
 groups = []
 
-[feedback]
+[deploy]
 enable_on_startup = true
 access_control = false
 list_mode = "WhiteList"
 
-[feedback.access_list]
+[deploy.access_list]
 friends = []
 groups = []

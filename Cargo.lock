@@ -480,6 +480,7 @@ name = "bot-helper"
 version = "0.1.0"
 dependencies = [
  "anyhow",
+ "deploy",
  "feedback",
  "kovi",
  "kovi-plugin-cmd",
@@ -750,6 +751,19 @@ name = "data-encoding"
 version = "2.9.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "2a2330da5de22e8a3cb63252ce2abb30116bf5265e89c0e01bc17015ce30a476"
+
+[[package]]
+name = "deploy"
+version = "0.1.0"
+dependencies = [
+ "anyhow",
+ "kovi",
+ "once_cell",
+ "serde",
+ "tokio",
+ "toml 0.9.8",
+ "tracing",
+]
 
 [[package]]
 name = "der"

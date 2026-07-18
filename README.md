@@ -1,132 +1,31 @@
 # QQBot
 
-基于 Kovi 框架的 QQ 机器人，用于处理学生反馈问题。
+基于 Kovi 框架的 QQ 机器人，用于易千内部。
+
 
 ## 开发前准备
 
-1. 设置好配置文件  
-   _可使用 `git update-index --skip-worktree` 防止上传更改_
-2. 初始化数据库  
-   _使用 `init.sql` 方法参照后文_
-
-## 技术栈
-
-- **Kovi**: QQ 机器人框架
-- **Rust**: 编程语言
-- **SQLite**: 本地数据库存储
-- **RabbitMQ**: 消息队列（接收反馈）
-- **Reqwest**: HTTP 客户端（调用后端 API）
-
-## 项目结构
+项目结构：
 
 ```
 qq_bot/
 ├── Cargo.toml              # 工作空间配置
 ├── src/main.rs             # 入口文件
 ├── config.toml             # 配置文件
+├── config.example.toml     # 配置示例
+├── init.sql                # feedback 插件数据库初始化脚本
+├── kovi.plugin.toml        # Kovi 插件启用配置
 ├── plugins/                # 插件目录
-│   └── feedback/           # 反馈处理插件
-│       ├── Cargo.toml
-│       └── src/
-│           ├── lib.rs          # 插件主入口
-│           ├── api.rs          # 与后端 API 交互
-│           ├── config.rs       # 配置加载
-│           ├── database.rs     # SQLite 数据库操作
-│           ├── entities.rs    # 数据结构定义
-│           ├── rabbitmq.rs     # RabbitMQ 连接管理
-│           ├── utils.rs       # 工具函数
-│           ├── commands/      # 指令处理
-│           │   ├── mod.rs         # 指令注册
-│           │   ├── framework.rs   # 指令框架定义
-│           │   └── handler/       # 具体指令实现
-│           │       ├── mod.rs
-│           │       ├── feedback.rs    # 反馈相关指令
-│           │       ├── fast_reply.rs  # 快捷回复指令
-│           │       └── misc.rs        # 帮助指令
+│   ├── feedback/           # 反馈处理插件
+│   └── deploy/             # 滚动部署插件
+└── Dockerfile
 ```
 
-## 模块说明
+1. 设置好配置文件
 
-### 核心模块
+   复制 `config.example.toml` 为 `config.toml`，按需填写各插件配置。
 
-| 文件                                            | 说明                                                         |
-| ----------------------------------------------- | ------------------------------------------------------------ |
-| [lib.rs](plugins/feedback/src/lib.rs)           | 插件入口，处理消息监听和反馈消息队列                         |
-| [api.rs](plugins/feedback/src/api.rs)           | 与后端 yqwork API 交互（获取反馈、更新状态、添加回复）       |
-| [database.rs](plugins/feedback/src/database.rs) | 本地 SQLite 操作，存储反馈与 QQ 消息 ID 的映射 和 fast_reply |
-| [config.rs](plugins/feedback/src/config.rs)     | 从 config.toml 加载配置                                      |
-| [entities.rs](plugins/feedback/src/entities.rs) | 数据结构定义                                                 |
-| [rabbitmq.rs](plugins/feedback/src/rabbitmq.rs) | RabbitMQ 连接管理                                            |
-
-### 指令系统
-
-指令系统基于命令模式实现：
-
-- **[framework.rs](plugins/feedback/src/commands/framework.rs)** : 定义 `CommandHandler` trait
-- **[mod.rs](plugins/feedback/src/commands/mod.rs)** : 注册所有可用指令
-- **[handler/](plugins/feedback/src/commands/handler/)** : 实现具体指令逻辑
-
-#### 可用指令
-
-| 指令         | 用法                             | 说明                         |
-| ------------ | -------------------------------- | ---------------------------- |
-| 帮助         | `帮助`                           | 显示帮助信息                 |
-| 列表         | `列表 [状态] [页码] [每页个数]`  | 查看反馈列表，默认未确认     |
-| 查看         | `查看 <id>`                      | 查看反馈详情（包括回复列表） |
-| 图片         | `图片 <id>`                      | 查看反馈附带图片             |
-| 回复         | `回复 <id> [内容]/#[快捷回复id]` | 给反馈添加回复               |
-| 确认         | `确认 <id>`                      | 标记为已确认                 |
-| 解决         | `解决 <id> [内容]/#[快捷回复id]` | 标记为已解决并可选回复       |
-| 快捷回复列表 | `快捷回复`                       | 查看快捷回复列表             |
-| 添加快捷回复 | `快捷回复添加 <关键词> <内容>`   | 添加快捷回复                 |
-| 删除快捷回复 | `快捷回复删除 <id>`              | 删除快捷回复                 |
-| 快捷回复详情 | `快捷回复详情 <id>`              | 查看快捷回复详情             |
-
-## 工作流程
-
-### 接收反馈
-
-```
-RabbitMQ 队列 → listen_feedback → 发送到 QQ 群 → 存储 msg_id 映射
-```
-
-### 处理指令
-
-```
-QQ 消息 (@机器人) → 解析指令 → 执行对应 Handler → 返回结果
-```
-
-### 指令解析
-
-1. 提取消息中的 `@` 指令
-2. 解析命令名称和参数
-3. 从数据库查找回复对应的反馈 ID（如果是回复消息）
-4. 调用对应的 CommandHandler 处理
-
-## 数据库
-
-使用 SQLite 存储反馈与 QQ 消息的映射关系：
-
-- `feedbacks` 表: 存储反馈 ID 和对应的 QQ 消息 ID
-- `fast_reply` 表: 存储快捷回复
-
-### 数据库初始化
-
-1. **配置文件设置**
-
-   `config.toml` 中的数据库配置：
-
-   ```toml
-   [database]
-   max_connections = 5
-   database_url = "sqlite:feedback.db"  # SQLite 数据库文件路径
-   ```
-
-   `database_url` 中的路径是相对于程序运行目录的
-
-2. **初始化数据库表**
-
-   运行以下命令创建表结构：
+2. 初始化数据库（用于 feedback 插件）
 
    ```bash
    sqlite3 feedback.db < init.sql
@@ -139,25 +38,39 @@ QQ 消息 (@机器人) → 解析指令 → 执行对应 Handler → 返回结�
    sqlite> .read init.sql
    ```
 
-## 配置文件
+3. 更多请参考对应插件的文档
 
-配置文件 `config.toml` 包含：
+## 插件
 
-- `[rabbitmq]`: RabbitMQ 连接配置
-- `[database]`: SQLite 数据库配置
-- `[feedback]`: QQ 配置
-- `[yqwork]`: 后端 API 配置
+| 插件 | 说明 | 文档 |
+| ---- | ---- | ---- |
+| feedback | 接收学生反馈推送，通过指令查询、回复和管理反馈 | [plugins/feedback/README.md](plugins/feedback/README.md) |
+| deploy | 通过 QQ 指令触发 Docker 蓝绿滚动发布 | [plugins/deploy/README.md](plugins/deploy/README.md) |
 
-## 运行
+## 指令总览
 
-```bash
-cargo run
-```
+所有指令均需在对应群内 **@ 机器人** 后发送。部分插件还要求发送者为管理员。
 
-## 开发
+**feedback 插件**
 
-### 检查代码
+| 指令 | 用法 | 说明 |
+| ---- | ---- | ---- |
+| 帮助 | `帮助` | 显示帮助信息 |
+| 列表 | `列表 [未确认/已确认/已解决] [页码] [每页个数]` | 查看反馈列表，默认未确认、第 1 页、每页 5 条 |
+| 查看 | `查看 <问题 id>` | 查看反馈详情（包括回复列表） |
+| 图片 | `图片 <问题 id>` | 查看反馈附带图片 |
+| 回复 | `回复 <问题 id> [...回复内容] / #[快捷回复id]` | 给反馈添加回复 |
+| 确认 | `确认 <问题 id>` | 标记为已确认 |
+| 解决 | `解决 <问题 id> [...回复内容] / #[快捷回复id]` | 标记为已解决并可选回复 |
+| 回复列表 | `回复列表` | 查看快捷回复列表 |
+| 回复更新 | `回复更新 #<快捷回复id> <...快捷回复内容>` | 添加或更新快捷回复 |
+| 回复删除 | `回复删除 #<快捷回复id>` | 删除快捷回复 |
+| 回复详情 | `回复详情 #<快捷回复id>` | 查看快捷回复详情 |
 
-```bash
-cargo check -p feedback
-```
+> 问题 ID 可通过回复反馈消息获得，也可在指令中直接指定。
+
+**deploy 插件**
+
+| 指令 | 用法 | 说明 |
+| ---- | ---- | ---- |
+| 部署 | `部署` | 检查镜像更新并执行滚动发布（仅管理员） |

@@ -8,12 +8,13 @@ openssl = { version = "0.10", features = ["vendored"] }
 
 [dependencies]
 anyhow = "1.0.100"
+deploy = { version = "0.1.0", path = "plugins/deploy" }
 feedback = { version = "0.1.0", path = "plugins/feedback" }
 kovi = "0.12.7"
 kovi-plugin-cmd = "0.3.0"
 
 [workspace]
-members = ["plugins/feedback"]
+members = ["plugins/feedback", "plugins/deploy"]
 
 [workspace.dependencies]
 kovi = "0.12.7"
