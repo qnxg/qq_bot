@@ -21,56 +21,6 @@ async fn main() {
         .expect("无法解析登录信息");
     kovi::spawn(listen_feedback(bot.clone()));
 
-    // 每天早8点发送"早上好"
-    let bot_morning = bot.clone();
-    let group_id_morning = CFG.feedback.group_id.clone();
-    plugin::cron("0 8 * * *", move || {
-        let bot = bot_morning.clone();
-        let group_id = group_id_morning.clone();
-        async move {
-            tracing::info!("定时消息: 早上好");
-            if let Err(e) = bot
-                .send_group_msg_return(group_id.parse().unwrap(), "早上好！")
-                .await
-            {
-                tracing::error!("发送定时消息失败: {:?}", e);
-            }
-        }
-    })
-    .unwrap();
-
-    // 每天晚8点发送"下班！"
-    let bot_evening = bot.clone();
-    let group_id_evening = CFG.feedback.group_id.clone();
-    plugin::cron("0 20 * * *", move || {
-        let bot = bot_evening.clone();
-        let group_id = group_id_evening.clone();
-        async move {
-            tracing::info!("定时消息: 下班！");
-            if let Err(e) = bot
-                .send_group_msg_return(group_id.parse().unwrap(), "下班！")
-                .await
-            {
-                tracing::error!("发送定时消息失败: {:?}", e);
-            }
-        }
-    })
-    .unwrap();
-
-    // 退出时发送"下了"
-    let bot_drop = bot.clone();
-    let group_id_drop = CFG.feedback.group_id.clone();
-    plugin::drop(move || {
-        let bot = bot_drop.clone();
-        let group_id = group_id_drop.clone();
-        async move {
-            tracing::info!("机器人下线");
-            let _ = bot
-                .send_group_msg_return(group_id.parse().unwrap(), "下了")
-                .await;
-        }
-    });
-
     plugin::on_msg(move |event| async move {
         if let Some(group_id) = event.group_id {
             if group_id.to_string() != CFG.feedback.group_id {
@@ -128,12 +78,6 @@ async fn main() {
         }
         Ok(())
     });
-
-    // 上线时发送"我上线了"
-    tracing::info!("机器人上线");
-    let _ = bot
-        .send_group_msg_return(CFG.feedback.group_id.parse().unwrap(), "我上线了")
-        .await;
 }
 
 async fn listen_feedback(bot: Arc<RuntimeBot>) {
