@@ -10,6 +10,9 @@ database_url = "sqlite:feedback.db"  # SQLite 数据库文件路径
 admin_qq = [""] # 管理员 QQ 号列表
 group_id = ""   # 机器人响应哪个群
 
+[daily_greeting]
+group_id = ""   # 定时消息发送到哪个群
+
 [yqwork]
 uid = 0                            # bot的用户ID
 secret = ""                        # JWT密钥
