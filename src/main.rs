@@ -1,6 +1,6 @@
 use kovi::build_bot;
 
 fn main() {
-    let bot = build_bot!(kovi_plugin_cmd, feedback, daily_greeting);
+    let bot = build_bot!(kovi_plugin_cmd, feedback, daily_greeting, deploy);
     bot.run();
 }

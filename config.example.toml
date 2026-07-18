@@ -1,0 +1,70 @@
+# feedback 插件配置 ----------------------------------
+[rabbitmq]
+# VirtualHost 需要 URL 编码，如 / 编码为 %2F
+url = "amqp://用户名:密码@ip地址:端口/VirtualHost"
+# 在哪个队列上接收反馈消息
+feedback_queue = "feedback.qqrobot"
+
+[database]
+max_connections = 5
+# SQLite 数据库文件路径
+database_url = "sqlite:feedback.db"
+
+[feedback]
+# 管理员 QQ 号列表
+admin_qq = [""]
+# 机器人响应哪个群
+group_id = ""
+
+[yqwork]
+# bot的用户ID
+uid = 0
+# JWT密钥                    
+secret = ""
+# 末尾不用添加 /
+url = "https://api.work.qnxg.cn"
+
+[daily_greeting]
+# 响应哪个群
+group_id = ""   
+
+# deploy 插件配置 ----------------------------------
+[deploy]
+# 管理员 QQ 号列表
+admin_qq = [""]
+# 机器人响应哪个群
+group_id = ""
+# 远程镜像地址
+remote_image = "jpccr.ccs.tencentyun.com/qnxg/weihuda_backend:latest"
+# 最新镜像名称
+local_image = "weihuda_backend:latest"
+# 前一个镜像名称
+older_image = "weihuda_backend:older"
+# 项目目录
+project_dir = "weihuda_backend"
+# 拉取镜像重试次数
+pull_retries = 5
+# 健康检查超时时间
+health_timeout_secs = 180
+# 健康检查间隔时间
+health_poll_interval_secs = 3
+# Caddy 配置文件路径
+caddy_import_file = "/etc/caddy/weihuda_backend.caddy"
+# Caddy 配置文件模板
+caddy_template = """
+reverse_proxy 127.0.0.1:{port}
+"""
+
+[deploy.docker_run]
+# 启动容器时附加参数
+common_args = ["--restart=unless-stopped"]
+
+[deploy.docker_run.slots.a]
+name = "weihuda_backend_a"
+host_port = 8081
+container_port = 8080
+
+[deploy.docker_run.slots.b]
+name = "weihuda_backend_b"
+host_port = 8082
+container_port = 8080
