@@ -235,6 +235,51 @@ pub async fn is_container_running(name: &str) -> Result<bool> {
     Ok(stdout.trim().eq_ignore_ascii_case("true"))
 }
 
+pub async fn container_exists(name: &str) -> Result<bool> {
+    let (code, _, _) = run_cmd("docker", &["inspect", name], None).await?;
+    Ok(code == 0)
+}
+
+pub async fn start_container(name: &str) -> Result<()> {
+    let (code, _, stderr) = run_cmd("docker", &["start", name], None).await?;
+    if code != 0 {
+        bail!(
+            "docker start {} 失败: {}",
+            name,
+            truncate_output(&stderr, 300)
+        );
+    }
+    Ok(())
+}
+
+/// 基于镜像 ID 安全交换两个 tag，避免互相覆盖丢失引用
+pub async fn swap_image_tags(local: &str, older: &str) -> Result<()> {
+    let (code_local, id_local, stderr_local) =
+        run_cmd("docker", &["image", "inspect", "--format", "{{.Id}}", local], None).await?;
+    if code_local != 0 {
+        bail!(
+            "无法获取镜像 {} 的 ID: {}",
+            local,
+            truncate_output(&stderr_local, 300)
+        );
+    }
+    let (code_older, id_older, stderr_older) =
+        run_cmd("docker", &["image", "inspect", "--format", "{{.Id}}", older], None).await?;
+    if code_older != 0 {
+        bail!(
+            "无法获取镜像 {} 的 ID: {}",
+            older,
+            truncate_output(&stderr_older, 300)
+        );
+    }
+    let id_local = id_local.trim();
+    let id_older = id_older.trim();
+    // 先用 ID 打标，互不依赖当前 tag 指向
+    tag_image(id_older, local).await?;
+    tag_image(id_local, older).await?;
+    Ok(())
+}
+
 pub async fn run_container(
     slot: &SlotConfig,
     common_args: &[String],

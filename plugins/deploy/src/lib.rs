@@ -55,7 +55,9 @@ async fn main() {
         }
 
         let cmd = text.trim();
-        if cmd != "部署" {
+        let is_deploy = cmd == "部署";
+        let is_rollback = cmd == "回滚";
+        if !is_deploy && !is_rollback {
             return Ok(());
         }
 
@@ -65,7 +67,7 @@ async fn main() {
             Err(_) => {
                 event.reply(
                     Message::new()
-                        .add_text("部署进行中，请稍后再试")
+                        .add_text("部署或回滚进行中，请稍后再试")
                         .add_reply(event.message_id),
                 );
                 return Ok(());
@@ -84,8 +86,12 @@ async fn main() {
             })
         };
 
-        if let Err(e) = deploy::run_deploy(Box::new(move |msg| reply_fn(msg))).await {
-            tracing::error!("部署失败: {:?}", e);
+        if is_deploy {
+            if let Err(e) = deploy::run_deploy(Box::new(move |msg| reply_fn(msg))).await {
+                tracing::error!("部署失败: {:?}", e);
+            }
+        } else if let Err(e) = deploy::run_rollback(Box::new(move |msg| reply_fn(msg))).await {
+            tracing::error!("回滚失败: {:?}", e);
         }
         drop(guard);
 
