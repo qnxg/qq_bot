@@ -46,6 +46,7 @@ qq_bot/
 | ---- | ---- | ---- |
 | feedback | 接收学生反馈推送，通过指令查询、回复和管理反馈 | [plugins/feedback/README.md](plugins/feedback/README.md) |
 | deploy | 通过 QQ 指令触发 Docker 蓝绿滚动发布 | [plugins/deploy/README.md](plugins/deploy/README.md) |
+| daily-greeting | 定时发送早中晚问候消息，上下线通知 | [plugins/daily-greeting/README.md](plugins/daily-greeting/README.md) |
 
 ## 指令总览
 
