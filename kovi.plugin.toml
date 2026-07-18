@@ -24,3 +24,12 @@ list_mode = "WhiteList"
 [deploy.access_list]
 friends = []
 groups = []
+
+[daily_greeting]
+enable_on_startup = true
+access_control = false
+list_mode = "WhiteList"
+
+[daily_greeting.access_list]
+friends = []
+groups = []

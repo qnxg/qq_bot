@@ -20,6 +20,7 @@ async fn main() {
         .as_i64()
         .expect("无法解析登录信息");
     kovi::spawn(listen_feedback(bot.clone()));
+
     plugin::on_msg(move |event| async move {
         if let Some(group_id) = event.group_id {
             if group_id.to_string() != CFG.feedback.group_id {

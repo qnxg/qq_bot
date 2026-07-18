@@ -24,6 +24,10 @@ secret = ""
 # 末尾不用添加 /
 url = "https://api.work.qnxg.cn"
 
+[daily_greeting]
+# 响应哪个群
+group_id = ""   
+
 # deploy 插件配置 ----------------------------------
 [deploy]
 # 管理员 QQ 号列表
