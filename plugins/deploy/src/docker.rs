@@ -254,8 +254,12 @@ pub async fn start_container(name: &str) -> Result<()> {
 
 /// 基于镜像 ID 安全交换两个 tag，避免互相覆盖丢失引用
 pub async fn swap_image_tags(local: &str, older: &str) -> Result<()> {
-    let (code_local, id_local, stderr_local) =
-        run_cmd("docker", &["image", "inspect", "--format", "{{.Id}}", local], None).await?;
+    let (code_local, id_local, stderr_local) = run_cmd(
+        "docker",
+        &["image", "inspect", "--format", "{{.Id}}", local],
+        None,
+    )
+    .await?;
     if code_local != 0 {
         bail!(
             "无法获取镜像 {} 的 ID: {}",
@@ -263,8 +267,12 @@ pub async fn swap_image_tags(local: &str, older: &str) -> Result<()> {
             truncate_output(&stderr_local, 300)
         );
     }
-    let (code_older, id_older, stderr_older) =
-        run_cmd("docker", &["image", "inspect", "--format", "{{.Id}}", older], None).await?;
+    let (code_older, id_older, stderr_older) = run_cmd(
+        "docker",
+        &["image", "inspect", "--format", "{{.Id}}", older],
+        None,
+    )
+    .await?;
     if code_older != 0 {
         bail!(
             "无法获取镜像 {} 的 ID: {}",
