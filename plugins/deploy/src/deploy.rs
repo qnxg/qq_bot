@@ -340,11 +340,10 @@ pub async fn run_deploy(reply_fn: ReplyFn) -> Result<()> {
 
 /// 解析当前活跃槽：优先 Caddy；否则按运行中的槽推断
 async fn resolve_active_slot() -> Result<SlotId> {
-    if let Some(port) = caddy::read_active_port(&CFG.deploy.caddy_import_file).await? {
-        if let Some(active) = slot_by_port(port) {
+    if let Some(port) = caddy::read_active_port(&CFG.deploy.caddy_import_file).await?
+        && let Some(active) = slot_by_port(port) {
             return Ok(active);
         }
-    }
 
     let a_run = docker::is_container_running(SlotId::A.config().name.as_str()).await?;
     let b_run = docker::is_container_running(SlotId::B.config().name.as_str()).await?;
