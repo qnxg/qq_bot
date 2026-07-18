@@ -8,16 +8,16 @@ use crate::config::CFG;
 async fn main() {
     let bot = plugin::get_runtime_bot();
 
-    // 每天早8点发送"早上好"
+    // 每天早8点发送"早"
     let bot_morning = bot.clone();
     let group_id_morning = CFG.daily_greeting.group_id.clone();
     plugin::cron("0 8 * * *", move || {
         let bot = bot_morning.clone();
         let group_id = group_id_morning.clone();
         async move {
-            tracing::info!("定时消息: 早上好");
+            tracing::info!("定时消息: 早");
             if let Err(e) = bot
-                .send_group_msg_return(group_id.parse().unwrap(), "早上好！")
+                .send_group_msg_return(group_id.parse().unwrap(), "早")
                 .await
             {
                 tracing::error!("发送定时消息失败: {:?}", e);
