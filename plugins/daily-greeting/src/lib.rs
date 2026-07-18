@@ -26,6 +26,24 @@ async fn main() {
     })
     .unwrap();
 
+    // 每天14点发送"𝓖𝓸𝓸𝓭 𝓪𝓯𝓽𝓮𝓻𝓷𝓸𝓸𝓷"
+    let bot_afternoon = bot.clone();
+    let group_id_afternoon = CFG.daily_greeting.group_id.clone();
+    plugin::cron("0 14 * * *", move || {
+        let bot = bot_afternoon.clone();
+        let group_id = group_id_afternoon.clone();
+        async move {
+            tracing::info!("定时消息: 𝓖𝓸𝓸𝓭 𝓪𝓯𝓽𝓮𝓻𝓷𝓸𝓸𝓷");
+            if let Err(e) = bot
+                .send_group_msg_return(group_id.parse().unwrap(), "𝓖𝓸𝓸𝓭 𝓪𝓯𝓽𝓮𝓻𝓷𝓸𝓸𝓷")
+                .await
+            {
+                tracing::error!("发送定时消息失败: {:?}", e);
+            }
+        }
+    })
+    .unwrap();
+
     // 每天晚8点发送"下班！"
     let bot_evening = bot.clone();
     let group_id_evening = CFG.daily_greeting.group_id.clone();
