@@ -51,3 +51,22 @@ fn init() -> Configs {
         .expect("读取配置文件失败");
     toml::from_str(&contents).expect("解析配置文件失败")
 }
+
+impl From<&Configs> for data_client::Config {
+    fn from(cfg: &Configs) -> Self {
+        data_client::Config {
+            rabbitmq: data_client::config::RabbitMQ {
+                url: cfg.rabbitmq.url.clone(),
+            },
+            database: data_client::config::Database {
+                database_url: cfg.database.database_url.clone(),
+                max_connections: cfg.database.max_connections,
+            },
+            yqwork: data_client::config::YQWork {
+                uid: cfg.yqwork.uid,
+                secret: cfg.yqwork.secret.clone(),
+                url: cfg.yqwork.url.clone(),
+            },
+        }
+    }
+}

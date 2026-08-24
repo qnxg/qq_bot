@@ -2,7 +2,7 @@ use anyhow::Result;
 use async_trait::async_trait;
 use kovi::Message;
 
-use crate::database;
+use data_client::database;
 
 pub struct CommandContext<'a> {
     args: Box<dyn Iterator<Item = &'a str> + Send + 'a>,

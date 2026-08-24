@@ -1,15 +1,18 @@
-use kovi::tokio::sync::OnceCell;
 use lapin::{Channel, Connection, ConnectionProperties};
+use tokio::sync::OnceCell;
 
-use crate::config::CFG;
+use crate::config::config;
 
 static RABBIT_CHANNEL: OnceCell<Channel> = OnceCell::const_new();
 
 pub async fn get_channel() -> Channel {
     RABBIT_CHANNEL
         .get_or_init(|| async {
-            let conn = match Connection::connect(&CFG.rabbitmq.url, ConnectionProperties::default())
-                .await
+            let conn = match Connection::connect(
+                &config().rabbitmq.url,
+                ConnectionProperties::default(),
+            )
+            .await
             {
                 Ok(conn) => {
                     tracing::info!("🔥 Successfully connected to RabbitMQ");

@@ -1,9 +1,10 @@
 use crate::{
     commands::framework::{CommandContext, CommandHandler},
-    database, utils,
+    utils,
 };
 use anyhow::Result;
 use async_trait::async_trait;
+use data_client::database;
 use kovi::Message;
 
 pub struct FastReplyListCommand;

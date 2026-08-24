@@ -1,11 +1,10 @@
 use crate::{
-    api,
     commands::framework::{CommandContext, CommandHandler},
-    entities::FeedbackStatus,
     utils,
 };
 use anyhow::Result;
 use async_trait::async_trait;
+use data_client::{api, entities::FeedbackStatus};
 use kovi::Message;
 
 pub struct FeedbackDetailCommand;

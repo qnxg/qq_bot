@@ -2,15 +2,14 @@ use crate::entities::ApiResponse;
 use crate::entities::{FeedbackDetail, FeedbackList, FeedbackMsg, FeedbackStatus};
 use anyhow::Result;
 use jsonwebtoken::{DecodingKey, EncodingKey, Header, Validation, decode};
-use kovi::tokio::sync::RwLock;
-use once_cell::sync::Lazy;
 use reqwest::{Client, Method, redirect::Policy};
 use serde::{Deserialize, Serialize};
 use serde_json::json;
-use std::sync::Arc;
+use std::sync::{Arc, LazyLock};
 use std::time::{Duration, SystemTime, UNIX_EPOCH};
+use tokio::sync::RwLock;
 
-use crate::config::CFG;
+use crate::config::config;
 
 // JWT payload 结构
 #[derive(Deserialize, Debug, Serialize)]
@@ -19,8 +18,8 @@ struct Payload {
     exp: usize,
 }
 
-static TOKEN_CACHE: Lazy<Arc<RwLock<String>>> =
-    Lazy::new(|| Arc::new(RwLock::new(generate_token())));
+static TOKEN_CACHE: LazyLock<Arc<RwLock<String>>> =
+    LazyLock::new(|| Arc::new(RwLock::new(generate_token())));
 
 fn generate_token() -> String {
     let now = SystemTime::now()
@@ -29,14 +28,14 @@ fn generate_token() -> String {
         .as_secs() as usize;
 
     let payload = Payload {
-        id: CFG.yqwork.uid,
+        id: config().yqwork.uid,
         exp: now + 60 * 60 * 8, // 8 小时过期
     };
 
     jsonwebtoken::encode(
         &Header::default(),
         &payload,
-        &EncodingKey::from_secret(CFG.yqwork.secret.as_bytes()),
+        &EncodingKey::from_secret(config().yqwork.secret.as_bytes()),
     )
     .expect("生成 token 失败")
 }
@@ -47,7 +46,7 @@ async fn get_token() -> String {
 
     let token_data = decode::<Payload>(
         &token,
-        &DecodingKey::from_secret(CFG.yqwork.secret.as_bytes()),
+        &DecodingKey::from_secret(config().yqwork.secret.as_bytes()),
         &Validation::default(),
     );
 
@@ -67,7 +66,7 @@ async fn get_token() -> String {
     }
 }
 
-pub static CLIENT: Lazy<Client> = Lazy::new(|| {
+pub static CLIENT: LazyLock<Client> = LazyLock::new(|| {
     Client::builder()
         .connection_verbose(false)
         .danger_accept_invalid_certs(true)
@@ -110,7 +109,7 @@ pub async fn get_feedback_list(
 ) -> Result<Vec<FeedbackDetail>> {
     let url = format!(
         "{}/feedback?status={}&page={}&pageSize={}",
-        CFG.yqwork.url,
+        config().yqwork.url,
         (*status) as i8,
         page,
         page_size
@@ -120,7 +119,7 @@ pub async fn get_feedback_list(
 }
 
 pub async fn get_feedback_detail(id: u32) -> Result<Option<FeedbackDetail>> {
-    let url = format!("{}/feedback/{}", CFG.yqwork.url, id);
+    let url = format!("{}/feedback/{}", config().yqwork.url, id);
     let mut res: Option<FeedbackDetail> = request(Method::GET, &url, None).await?.and_then(|x| x);
 
     if let Some(feedback) = &mut res {
@@ -131,7 +130,7 @@ pub async fn get_feedback_detail(id: u32) -> Result<Option<FeedbackDetail>> {
 }
 
 pub async fn get_feedback_msg_list(feedback_id: u32) -> Result<Vec<FeedbackMsg>> {
-    let url = format!("{}/feedback/{}/msg", CFG.yqwork.url, feedback_id);
+    let url = format!("{}/feedback/{}/msg", config().yqwork.url, feedback_id);
     let res: Vec<FeedbackMsg> = request(Method::GET, &url, None).await?.unwrap();
     Ok(res)
 }
@@ -139,7 +138,7 @@ pub async fn get_feedback_msg_list(feedback_id: u32) -> Result<Vec<FeedbackMsg>>
 pub async fn get_feedback_count(status: &FeedbackStatus) -> Result<u32> {
     let url = format!(
         "{}/feedback?status={}&page=1&pageSize=0",
-        CFG.yqwork.url,
+        config().yqwork.url,
         (*status) as i8
     );
     let res: FeedbackList = request(Method::GET, &url, None).await?.unwrap();
@@ -147,7 +146,7 @@ pub async fn get_feedback_count(status: &FeedbackStatus) -> Result<u32> {
 }
 
 pub async fn add_feedback_msg(feedback_id: u32, msg: String) -> Result<()> {
-    let url = format!("{}/feedback/{}/msg", CFG.yqwork.url, feedback_id);
+    let url = format!("{}/feedback/{}/msg", config().yqwork.url, feedback_id);
     let body = json!({
         "typ": "comment",
         "msg": msg
@@ -162,7 +161,7 @@ pub async fn update_feedback_status(feedback_id: u32, status: FeedbackStatus) ->
     if let Some(feedback_detail) = get_feedback_detail(feedback_id).await?
         && feedback_detail.status as i8 != status as i8
     {
-        let url = format!("{}/feedback/{}", CFG.yqwork.url, feedback_id);
+        let url = format!("{}/feedback/{}", config().yqwork.url, feedback_id);
 
         let body = json!({
             "status": i8::from(status),
@@ -177,11 +176,12 @@ pub async fn update_feedback_status(feedback_id: u32, status: FeedbackStatus) ->
 #[cfg(test)]
 mod tests {
     use super::*;
+    use crate::config::init_test_config;
     use crate::entities::FeedbackStatus;
-    use kovi::tokio;
 
     #[tokio::test]
     async fn test_get_feedback_list() {
+        init_test_config();
         let status = FeedbackStatus::Unconfirmed;
         let page = 1;
         let page_size = 10;
@@ -192,6 +192,7 @@ mod tests {
 
     #[tokio::test]
     async fn test_get_feedback_detail() {
+        init_test_config();
         let test_id = 1;
 
         let result = get_feedback_detail(test_id).await;
@@ -210,6 +211,7 @@ mod tests {
 
     #[tokio::test]
     async fn test_get_feedback_count() {
+        init_test_config();
         let status = FeedbackStatus::Unconfirmed;
 
         let result = get_feedback_count(&status).await.unwrap();
@@ -218,6 +220,7 @@ mod tests {
 
     #[tokio::test]
     async fn test_add_feedback_msg() {
+        init_test_config();
         let feedback_id = 2879;
         let msg = "测试添加消息".to_string();
 
@@ -233,6 +236,7 @@ mod tests {
 
     #[tokio::test]
     async fn test_update_feedback_status() {
+        init_test_config();
         let feedback_id = 2879;
 
         let statuses = [

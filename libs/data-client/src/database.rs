@@ -1,8 +1,8 @@
-use crate::config::CFG;
+use crate::config::config;
 use anyhow::Result;
-use kovi::tokio::sync::OnceCell;
 use sqlx::sqlite::{SqlitePool, SqlitePoolOptions};
 use std::time::Duration;
+use tokio::sync::OnceCell;
 
 static DB_POOL: OnceCell<SqlitePool> = OnceCell::const_new();
 
@@ -20,9 +20,9 @@ pub async fn get_db_pool() -> SqlitePool {
     DB_POOL
         .get_or_init(|| async {
             match SqlitePoolOptions::new()
-                .max_connections(CFG.database.max_connections)
+                .max_connections(config().database.max_connections)
                 .acquire_timeout(Duration::from_secs(3))
-                .connect(&CFG.database.database_url)
+                .connect(&config().database.database_url)
                 .await
             {
                 Ok(pool) => {
@@ -131,7 +131,6 @@ pub async fn update_feedback_msg_id(feedback_id: u32, msg_id: i32) -> Result<()>
 #[cfg(test)]
 mod tests {
     use super::*;
-    use kovi::tokio;
     use sqlx::sqlite::{SqliteConnectOptions, SqlitePoolOptions};
     use std::str::FromStr;
 
