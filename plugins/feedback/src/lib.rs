@@ -1,18 +1,14 @@
 mod commands;
-mod config;
 mod utils;
 
 use std::sync::Arc;
 
-use data_client::{database, entities::RabbitFeedbackMessage, rabbitmq};
+use data_client::{CFG, database, entities::RabbitFeedbackMessage, rabbitmq};
 use kovi::{Message, PluginBuilder as plugin, RuntimeBot, futures_util::StreamExt};
 use lapin::{options::BasicConsumeOptions, types::FieldTable};
 
-use crate::config::CFG;
-
 #[kovi::plugin]
 async fn main() {
-    data_client::init(CFG.clone());
     let bot = plugin::get_runtime_bot();
     let user_id = bot.get_login_info().await.expect("获取登录信息失败").data["user_id"]
         .as_i64()

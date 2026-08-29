@@ -1,7 +1,7 @@
 use lapin::{Channel, Connection, ConnectionProperties};
 use tokio::sync::OnceCell;
 
-use crate::config::config;
+use crate::config::CFG;
 
 static RABBIT_CHANNEL: OnceCell<Channel> = OnceCell::const_new();
 
@@ -9,7 +9,7 @@ pub async fn get_channel() -> Channel {
     RABBIT_CHANNEL
         .get_or_init(|| async {
             let conn =
-                match Connection::connect(&config().rabbitmq.url, ConnectionProperties::default())
+                match Connection::connect(&CFG.rabbitmq.url, ConnectionProperties::default())
                     .await
                 {
                     Ok(conn) => {

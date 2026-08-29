@@ -1,4 +1,4 @@
-use crate::config::config;
+use crate::config::CFG;
 use anyhow::Result;
 use sqlx::sqlite::{SqlitePool, SqlitePoolOptions};
 use std::time::Duration;
@@ -20,9 +20,9 @@ pub async fn get_db_pool() -> SqlitePool {
     DB_POOL
         .get_or_init(|| async {
             match SqlitePoolOptions::new()
-                .max_connections(config().database.max_connections)
+                .max_connections(CFG.database.max_connections)
                 .acquire_timeout(Duration::from_secs(3))
-                .connect(&config().database.database_url)
+                .connect(&CFG.database.database_url)
                 .await
             {
                 Ok(pool) => {

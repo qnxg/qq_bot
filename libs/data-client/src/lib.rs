@@ -4,4 +4,4 @@ pub mod database;
 pub mod entities;
 pub mod rabbitmq;
 
-pub use config::{Configs, init};
+pub use config::{CFG, Configs};

@@ -1,7 +1,10 @@
-use serde::Deserialize;
-use std::sync::OnceLock;
+use std::{fs::File, io::Read, sync::LazyLock};
 
-#[derive(Deserialize, Debug, Clone)]
+use serde::Deserialize;
+
+pub static CFG: LazyLock<Configs> = LazyLock::new(init);
+
+#[derive(Deserialize, Debug)]
 pub struct Configs {
     pub rabbitmq: RabbitMQ,
     pub feedback: Feedback,
@@ -9,20 +12,20 @@ pub struct Configs {
     pub yqwork: YQWork,
 }
 
-#[derive(Deserialize, Debug, Clone)]
+#[derive(Deserialize, Debug)]
 pub struct RabbitMQ {
     pub url: String,
     pub feedback_queue: String,
 }
 
-#[derive(Deserialize, Debug, Clone)]
+#[derive(Deserialize, Debug)]
 pub struct Feedback {
     #[allow(unused)]
     pub admin_qq: Vec<String>,
     pub group_id: String,
 }
 
-#[derive(Deserialize, Debug, Clone)]
+#[derive(Deserialize, Debug)]
 pub struct Database {
     pub database_url: String,
     pub max_connections: u32,
@@ -35,29 +38,15 @@ pub struct YQWork {
     pub url: String,
 }
 
-static CONFIG: OnceLock<Configs> = OnceLock::new();
-
-/// 注入全局配置。必须在使用 [`crate::api`]、[`crate::database`]、
-/// [`crate::rabbitmq`] 之前调用一次；重复调用会被忽略。
-pub fn init(config: Configs) {
-    let _ = CONFIG.set(config);
-}
-
-pub(crate) fn config() -> &'static Configs {
-    CONFIG
-        .get()
-        .expect("data-client 未初始化，请先调用 data_client::init")
-}
-
-/// 测试辅助：从项目根的 config.toml 读取配置并初始化
-#[cfg(test)]
-pub(crate) fn init_test_config() {
-    use std::{fs::File, io::Read};
-
-    let mut file = File::open("../../config.toml").expect("读取配置文件失败");
+fn init() -> Configs {
+    // 运行时从项目根目录启动；跑测试时 cwd 在 crate 目录下
+    let path = ["config.toml", "../../config.toml"]
+        .into_iter()
+        .find(|p| std::path::Path::new(p).exists())
+        .expect("找不到配置文件 config.toml");
+    let mut file = File::open(path).expect("读取配置文件失败");
     let mut contents = String::new();
     file.read_to_string(&mut contents)
         .expect("读取配置文件失败");
-    let config: Configs = toml::from_str(&contents).expect("解析配置文件失败");
-    init(config);
+    toml::from_str(&contents).expect("解析配置文件失败")
 }
