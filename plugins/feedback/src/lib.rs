@@ -12,7 +12,7 @@ use crate::config::CFG;
 
 #[kovi::plugin]
 async fn main() {
-    data_client::init((&*CFG).into());
+    data_client::init(CFG.clone());
     let bot = plugin::get_runtime_bot();
     let user_id = bot.get_login_info().await.expect("获取登录信息失败").data["user_id"]
         .as_i64()

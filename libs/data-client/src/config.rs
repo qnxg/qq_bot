@@ -2,8 +2,9 @@ use serde::Deserialize;
 use std::sync::OnceLock;
 
 #[derive(Deserialize, Debug, Clone)]
-pub struct Config {
+pub struct Configs {
     pub rabbitmq: RabbitMQ,
+    pub feedback: Feedback,
     pub database: Database,
     pub yqwork: YQWork,
 }
@@ -11,6 +12,14 @@ pub struct Config {
 #[derive(Deserialize, Debug, Clone)]
 pub struct RabbitMQ {
     pub url: String,
+    pub feedback_queue: String,
+}
+
+#[derive(Deserialize, Debug, Clone)]
+pub struct Feedback {
+    #[allow(unused)]
+    pub admin_qq: Vec<String>,
+    pub group_id: String,
 }
 
 #[derive(Deserialize, Debug, Clone)]
@@ -26,15 +35,15 @@ pub struct YQWork {
     pub url: String,
 }
 
-static CONFIG: OnceLock<Config> = OnceLock::new();
+static CONFIG: OnceLock<Configs> = OnceLock::new();
 
 /// 注入全局配置。必须在使用 [`crate::api`]、[`crate::database`]、
 /// [`crate::rabbitmq`] 之前调用一次；重复调用会被忽略。
-pub fn init(config: Config) {
+pub fn init(config: Configs) {
     let _ = CONFIG.set(config);
 }
 
-pub(crate) fn config() -> &'static Config {
+pub(crate) fn config() -> &'static Configs {
     CONFIG
         .get()
         .expect("data-client 未初始化，请先调用 data_client::init")
@@ -49,6 +58,6 @@ pub(crate) fn init_test_config() {
     let mut contents = String::new();
     file.read_to_string(&mut contents)
         .expect("读取配置文件失败");
-    let config: Config = toml::from_str(&contents).expect("解析配置文件失败");
+    let config: Configs = toml::from_str(&contents).expect("解析配置文件失败");
     init(config);
 }
