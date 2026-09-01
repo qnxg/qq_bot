@@ -8,6 +8,7 @@ pub static CFG: LazyLock<Configs> = LazyLock::new(init);
 pub struct Configs {
     pub rabbitmq: RabbitMQ,
     pub feedback: Feedback,
+    pub relay: Relay,
     pub database: Database,
     pub yqwork: YQWork,
 }
@@ -22,6 +23,12 @@ pub struct RabbitMQ {
 pub struct Feedback {
     #[allow(unused)]
     pub admin_qq: Vec<String>,
+    pub group_id: String,
+}
+
+#[derive(Deserialize, Debug)]
+pub struct Relay {
+    pub message_queue: String,
     pub group_id: String,
 }
 

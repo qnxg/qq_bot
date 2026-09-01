@@ -17,6 +17,7 @@ qq_bot/
 ├── kovi.plugin.toml        # Kovi 插件启用配置
 ├── plugins/                # 插件目录
 │   ├── feedback/           # 反馈处理插件
+│   ├── relay/              # 队列消息转发插件
 │   └── deploy/             # 滚动部署插件
 └── Dockerfile
 ```
@@ -47,6 +48,7 @@ qq_bot/
 | feedback | 接收学生反馈推送，通过指令查询、回复和管理反馈 | [plugins/feedback/README.md](plugins/feedback/README.md) |
 | deploy | 通过 QQ 指令触发 Docker 蓝绿滚动发布 | [plugins/deploy/README.md](plugins/deploy/README.md) |
 | daily-greeting | 定时发送早中晚问候消息，上下线通知 | [plugins/daily-greeting/README.md](plugins/daily-greeting/README.md) |
+| relay | 从 RabbitMQ 队列接收纯文本消息并原样转发到 QQ 群 | [plugins/relay/README.md](plugins/relay/README.md) |
 
 ## 指令总览
 

@@ -11,11 +11,12 @@ anyhow = "1.0.100"
 daily-greeting = { version = "0.1.0", path = "plugins/daily-greeting" }
 deploy = { version = "0.1.0", path = "plugins/deploy" }
 feedback = { version = "0.1.0", path = "plugins/feedback" }
+relay = { version = "0.1.0", path = "plugins/relay" }
 kovi = "0.12.7"
 kovi-plugin-cmd = "0.3.0"
 
 [workspace]
-members = ["plugins/feedback", "plugins/daily-greeting", "plugins/deploy", "libs/data-client"]
+members = ["plugins/feedback", "plugins/daily-greeting", "plugins/deploy", "plugins/relay", "libs/data-client"]
 
 [workspace.dependencies]
 kovi = "0.12.7"
