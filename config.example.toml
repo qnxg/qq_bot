@@ -24,6 +24,12 @@ secret = ""
 # 末尾不用添加 /
 url = "https://api.work.qnxg.cn"
 
+[relay]
+# 消息来源队列（消息体为纯文本，原样转发）
+message_queue = "message.qqrobot"
+# 转发到哪个群
+group_id = ""
+
 [daily_greeting]
 # 响应哪个群
 group_id = ""   

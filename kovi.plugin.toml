@@ -33,3 +33,12 @@ list_mode = "WhiteList"
 [daily_greeting.access_list]
 friends = []
 groups = []
+
+[relay]
+enable_on_startup = true
+access_control = false
+list_mode = "WhiteList"
+
+[relay.access_list]
+friends = []
+groups = []

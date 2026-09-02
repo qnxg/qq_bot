@@ -1,0 +1,13 @@
+[package]
+name = "relay"
+version = "0.1.0"
+edition = "2024"
+
+[target.'cfg(not(windows))'.dependencies]
+openssl = { version = "0.10", features = ["vendored"] }
+
+[dependencies]
+data-client = { version = "0.1.0", path = "../../libs/data-client" }
+kovi.workspace = true
+lapin = { version = "3.7.0", features = ["rustls"] }
+tracing = "0.1.41"
