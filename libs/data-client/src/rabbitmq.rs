@@ -1,5 +1,5 @@
-use kovi::tokio::sync::OnceCell;
 use lapin::{Channel, Connection, ConnectionProperties};
+use tokio::sync::OnceCell;
 
 use crate::config::CFG;
 

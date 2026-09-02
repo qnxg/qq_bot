@@ -1,17 +1,11 @@
-mod api;
 mod commands;
-mod config;
-mod database;
-mod entities;
-mod rabbitmq;
 mod utils;
 
 use std::sync::Arc;
 
+use data_client::{CFG, database, entities::RabbitFeedbackMessage, rabbitmq};
 use kovi::{Message, PluginBuilder as plugin, RuntimeBot, futures_util::StreamExt};
 use lapin::{options::BasicConsumeOptions, types::FieldTable};
-
-use crate::{config::CFG, entities::RabbitFeedbackMessage};
 
 #[kovi::plugin]
 async fn main() {

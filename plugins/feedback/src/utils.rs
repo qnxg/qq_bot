@@ -1,4 +1,4 @@
-use crate::entities::FeedbackDetail;
+use data_client::entities::FeedbackDetail;
 
 pub fn format_feedback_summary(feedback: &FeedbackDetail) -> String {
     let mut s = format!(

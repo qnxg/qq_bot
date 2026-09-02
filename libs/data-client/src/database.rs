@@ -1,8 +1,8 @@
 use crate::config::CFG;
 use anyhow::Result;
-use kovi::tokio::sync::OnceCell;
 use sqlx::sqlite::{SqlitePool, SqlitePoolOptions};
 use std::time::Duration;
+use tokio::sync::OnceCell;
 
 static DB_POOL: OnceCell<SqlitePool> = OnceCell::const_new();
 
@@ -131,7 +131,6 @@ pub async fn update_feedback_msg_id(feedback_id: u32, msg_id: i32) -> Result<()>
 #[cfg(test)]
 mod tests {
     use super::*;
-    use kovi::tokio;
     use sqlx::sqlite::{SqliteConnectOptions, SqlitePoolOptions};
     use std::str::FromStr;
 

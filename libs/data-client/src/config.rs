@@ -1,9 +1,8 @@
-use std::{fs::File, io::Read};
+use std::{fs::File, io::Read, sync::LazyLock};
 
-use once_cell::sync::Lazy;
 use serde::Deserialize;
 
-pub static CFG: Lazy<Configs> = Lazy::new(init);
+pub static CFG: LazyLock<Configs> = LazyLock::new(init);
 
 #[derive(Deserialize, Debug)]
 pub struct Configs {
@@ -40,12 +39,12 @@ pub struct YQWork {
 }
 
 fn init() -> Configs {
-    let mut file = File::open(if cfg!(test) {
-        "../../config.toml"
-    } else {
-        "config.toml"
-    })
-    .expect("读取配置文件失败");
+    // 运行时从项目根目录启动；跑测试时 cwd 在 crate 目录下
+    let path = ["config.toml", "../../config.toml"]
+        .into_iter()
+        .find(|p| std::path::Path::new(p).exists())
+        .expect("找不到配置文件 config.toml");
+    let mut file = File::open(path).expect("读取配置文件失败");
     let mut contents = String::new();
     file.read_to_string(&mut contents)
         .expect("读取配置文件失败");

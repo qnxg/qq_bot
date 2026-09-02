@@ -2,13 +2,12 @@ use crate::entities::ApiResponse;
 use crate::entities::{FeedbackDetail, FeedbackList, FeedbackMsg, FeedbackStatus};
 use anyhow::Result;
 use jsonwebtoken::{DecodingKey, EncodingKey, Header, Validation, decode};
-use kovi::tokio::sync::RwLock;
-use once_cell::sync::Lazy;
 use reqwest::{Client, Method, redirect::Policy};
 use serde::{Deserialize, Serialize};
 use serde_json::json;
-use std::sync::Arc;
+use std::sync::{Arc, LazyLock};
 use std::time::{Duration, SystemTime, UNIX_EPOCH};
+use tokio::sync::RwLock;
 
 use crate::config::CFG;
 
@@ -19,8 +18,8 @@ struct Payload {
     exp: usize,
 }
 
-static TOKEN_CACHE: Lazy<Arc<RwLock<String>>> =
-    Lazy::new(|| Arc::new(RwLock::new(generate_token())));
+static TOKEN_CACHE: LazyLock<Arc<RwLock<String>>> =
+    LazyLock::new(|| Arc::new(RwLock::new(generate_token())));
 
 fn generate_token() -> String {
     let now = SystemTime::now()
@@ -67,7 +66,7 @@ async fn get_token() -> String {
     }
 }
 
-pub static CLIENT: Lazy<Client> = Lazy::new(|| {
+pub static CLIENT: LazyLock<Client> = LazyLock::new(|| {
     Client::builder()
         .connection_verbose(false)
         .danger_accept_invalid_certs(true)
@@ -178,7 +177,6 @@ pub async fn update_feedback_status(feedback_id: u32, status: FeedbackStatus) ->
 mod tests {
     use super::*;
     use crate::entities::FeedbackStatus;
-    use kovi::tokio;
 
     #[tokio::test]
     async fn test_get_feedback_list() {

@@ -15,7 +15,7 @@ kovi = "0.12.7"
 kovi-plugin-cmd = "0.3.0"
 
 [workspace]
-members = ["plugins/feedback", "plugins/daily-greeting", "plugins/deploy"]
+members = ["plugins/feedback", "plugins/daily-greeting", "plugins/deploy", "libs/data-client"]
 
 [workspace.dependencies]
 kovi = "0.12.7"

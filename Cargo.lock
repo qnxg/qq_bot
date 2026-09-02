@@ -709,6 +709,24 @@ dependencies = [
 ]
 
 [[package]]
+name = "data-client"
+version = "0.1.0"
+dependencies = [
+ "anyhow",
+ "chrono",
+ "jsonwebtoken",
+ "lapin",
+ "openssl",
+ "reqwest",
+ "serde",
+ "serde_json",
+ "sqlx",
+ "tokio",
+ "toml 0.9.12+spec-1.1.0",
+ "tracing",
+]
+
+[[package]]
 name = "data-encoding"
 version = "2.11.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -953,17 +971,12 @@ version = "0.1.0"
 dependencies = [
  "anyhow",
  "async-trait",
- "chrono",
- "jsonwebtoken",
+ "data-client",
  "kovi",
  "lapin",
  "once_cell",
  "openssl",
- "reqwest",
- "serde",
  "serde_json",
- "sqlx",
- "toml 0.9.12+spec-1.1.0",
  "tracing",
 ]
 
