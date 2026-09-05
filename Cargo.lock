@@ -429,6 +429,7 @@ name = "bot-helper"
 version = "0.3.0"
 dependencies = [
  "anyhow",
+ "chat-logger",
  "daily-greeting",
  "deploy",
  "feedback",
@@ -498,6 +499,23 @@ dependencies = [
  "cfg-if",
  "cpufeatures 0.3.0",
  "rand_core 0.10.1",
+]
+
+[[package]]
+name = "chat-logger"
+version = "0.1.0"
+dependencies = [
+ "anyhow",
+ "data-client",
+ "kovi",
+ "once_cell",
+ "openssl",
+ "reqwest",
+ "serde",
+ "serde_json",
+ "tokio",
+ "toml 0.9.12+spec-1.1.0",
+ "tracing",
 ]
 
 [[package]]
