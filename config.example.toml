@@ -7,8 +7,8 @@ feedback_queue = "feedback.qqrobot"
 
 [database]
 max_connections = 5
-# SQLite 数据库文件路径
-database_url = "sqlite:feedback.db"
+# SQLite 数据库文件路径（全项目共享，启动时自动执行 init.sql 初始化表结构）
+database_url = "sqlite:local.db"
 
 [feedback]
 # 管理员 QQ 号列表
@@ -33,6 +33,15 @@ group_id = ""
 [daily_greeting]
 # 响应哪个群
 group_id = ""   
+
+# chat_logger 插件配置 ----------------------------------
+[chat_logger]
+# 管理员 QQ 号列表，只有管理员 @ 机器人才能使用 监听/取消监听/统计监听 指令
+admin_qq = [""]
+# 聊天记录中图片下载保存的目录
+image_dir = "data/chat_images"
+# 聊天记录中文件下载保存的目录
+file_dir = "data/chat_files"
 
 # deploy 插件配置 ----------------------------------
 [deploy]

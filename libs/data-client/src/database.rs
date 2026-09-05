@@ -1,10 +1,14 @@
 use crate::config::CFG;
 use anyhow::Result;
-use sqlx::sqlite::{SqlitePool, SqlitePoolOptions};
+use sqlx::sqlite::{SqliteConnectOptions, SqlitePool, SqlitePoolOptions};
+use std::str::FromStr;
 use std::time::Duration;
 use tokio::sync::OnceCell;
 
 static DB_POOL: OnceCell<SqlitePool> = OnceCell::const_new();
+
+/// 数据库初始化脚本，随二进制一起编译进来，启动时对 local.db 执行。
+const INIT_SQL: &str = include_str!("../../../init.sql");
 
 /// # Performance
 /// 参见 [`sqlx::pool::Pool`] 文档：
@@ -14,15 +18,25 @@ static DB_POOL: OnceCell<SqlitePool> = OnceCell::const_new();
 /// 因此实际上没有必要将[`SqlitePool`]用[`std::sync::Arc`]等包裹。
 /// 可以直接调用此函数获得全局数据库池。
 ///
+/// 首次获取连接池时会自动创建数据库文件（若不存在），并执行 `init.sql`
+/// 中的建表语句，因此所有插件共用的 `local.db` 表结构总是最新的。
+///
 /// # Side Effects
 /// 数据库连接异常时，这个函数可能会结束进程。
 pub async fn get_db_pool() -> SqlitePool {
     DB_POOL
         .get_or_init(|| async {
-            match SqlitePoolOptions::new()
+            let options = match SqliteConnectOptions::from_str(&CFG.database.database_url) {
+                Ok(options) => options.create_if_missing(true),
+                Err(e) => {
+                    tracing::error!("🪨 Invalid database url: {:?}", e);
+                    std::process::exit(1);
+                }
+            };
+            let pool = match SqlitePoolOptions::new()
                 .max_connections(CFG.database.max_connections)
                 .acquire_timeout(Duration::from_secs(3))
-                .connect(&CFG.database.database_url)
+                .connect_with(options)
                 .await
             {
                 Ok(pool) => {
@@ -33,7 +47,14 @@ pub async fn get_db_pool() -> SqlitePool {
                     tracing::error!("🪨 Failed to connect to SQLite: {:?}", e);
                     std::process::exit(1);
                 }
+            };
+            // 启动时执行 init.sql，保证 local.db 的表结构已初始化
+            if let Err(e) = sqlx::raw_sql(INIT_SQL).execute(&pool).await {
+                tracing::error!("🪨 Failed to run init.sql: {:?}", e);
+                std::process::exit(1);
             }
+            tracing::info!("🔥 Successfully initialized local.db schema");
+            pool
         })
         .await
         .clone()
@@ -122,6 +143,104 @@ pub async fn update_feedback_msg_id(feedback_id: u32, msg_id: i32) -> Result<()>
         "#,
         feedback_id,
         msg_id
+    )
+    .execute(&get_db_pool().await)
+    .await?;
+    Ok(())
+}
+
+/// 将群加入监听列表，重复添加不会报错。
+pub async fn add_monitored_group(group_id: i64) -> Result<()> {
+    sqlx::query!(
+        r#"
+        INSERT INTO monitored_groups (group_id)
+        VALUES (?)
+        ON CONFLICT(group_id) DO NOTHING
+        "#,
+        group_id
+    )
+    .execute(&get_db_pool().await)
+    .await?;
+    Ok(())
+}
+
+/// 将群从监听列表中移除，返回是否确实删除了记录。
+pub async fn remove_monitored_group(group_id: i64) -> Result<bool> {
+    let affected = sqlx::query!(
+        r#"
+        DELETE FROM monitored_groups
+        WHERE group_id = ?
+        "#,
+        group_id
+    )
+    .execute(&get_db_pool().await)
+    .await?
+    .rows_affected();
+    Ok(affected > 0)
+}
+
+/// 查询某个群是否正在被监听。
+pub async fn is_group_monitored(group_id: i64) -> Result<bool> {
+    let row = sqlx::query!(
+        r#"
+        SELECT 1 AS exist
+        FROM monitored_groups
+        WHERE group_id = ?
+        "#,
+        group_id
+    )
+    .fetch_optional(&get_db_pool().await)
+    .await?;
+    Ok(row.is_some())
+}
+
+/// 统计每个被监听群下已收集的聊天记录数量。
+///
+/// 返回 `(群号, 记录数)` 列表，包含尚无记录的群（记录数为 0）。
+pub async fn get_monitored_group_counts() -> Result<Vec<(i64, i64)>> {
+    let rows = sqlx::query!(
+        r#"
+        SELECT m.group_id AS "group_id!: i64", COUNT(c.id) AS "count!: i64"
+        FROM monitored_groups m
+        LEFT JOIN chat_records c ON c.group_id = m.group_id
+        GROUP BY m.group_id
+        ORDER BY m.group_id
+        "#
+    )
+    .fetch_all(&get_db_pool().await)
+    .await?;
+    Ok(rows.into_iter().map(|r| (r.group_id, r.count)).collect())
+}
+
+/// 插入一条群聊天记录。
+pub async fn insert_chat_record(record: &crate::entities::NewChatRecord) -> Result<()> {
+    sqlx::query!(
+        r#"
+        INSERT INTO chat_records (
+            message_id, group_id, user_id, nickname, card, role,
+            message_type, sub_type, raw_message, plain_text, human_text,
+            images, files, message_json, original_json, self_id, font, msg_time
+        )
+        VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+        "#,
+        record.message_id,
+        record.group_id,
+        record.user_id,
+        record.nickname,
+        record.card,
+        record.role,
+        record.message_type,
+        record.sub_type,
+        record.raw_message,
+        record.plain_text,
+        record.human_text,
+        record.images,
+        record.files,
+        record.message_json,
+        record.original_json,
+        record.self_id,
+        record.font,
+        record.msg_time,
     )
     .execute(&get_db_pool().await)
     .await?;

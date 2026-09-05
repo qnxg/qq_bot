@@ -117,3 +117,44 @@ pub struct RabbitFeedbackMessage {
     pub img_url: Option<String>,
     pub id: u64,
 }
+
+/// 待写入 `chat_records` 表的一条群聊天记录，尽可能详尽地保留原始信息。
+#[derive(Debug, Default, Clone)]
+pub struct NewChatRecord {
+    /// QQ 消息 ID
+    pub message_id: i64,
+    /// 来源群号
+    pub group_id: i64,
+    /// 发送者 QQ 号
+    pub user_id: i64,
+    /// 发送者昵称
+    pub nickname: Option<String>,
+    /// 发送者群名片
+    pub card: Option<String>,
+    /// 发送者群角色（owner/admin/member）
+    pub role: Option<String>,
+    /// 消息类型
+    pub message_type: Option<String>,
+    /// 消息子类型
+    pub sub_type: Option<String>,
+    /// 原始消息串（含 CQ 码）
+    pub raw_message: Option<String>,
+    /// 提取出的纯文本
+    pub plain_text: Option<String>,
+    /// 人类可读文本（含 \[image\] 等占位）
+    pub human_text: Option<String>,
+    /// JSON 数组，记录图片原始 URL 与下载到本地的路径
+    pub images: Option<String>,
+    /// JSON 数组，记录文件名/ID/大小/URL 与下载到本地的路径
+    pub files: Option<String>,
+    /// 完整的 OneBot 消息段 JSON
+    pub message_json: Option<String>,
+    /// 完整的原始事件 JSON
+    pub original_json: Option<String>,
+    /// 收到消息的机器人登录号
+    pub self_id: i64,
+    /// 字体
+    pub font: i64,
+    /// 消息事件时间戳（秒）
+    pub msg_time: i64,
+}

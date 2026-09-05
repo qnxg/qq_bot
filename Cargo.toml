@@ -8,6 +8,7 @@ openssl = { version = "0.10", features = ["vendored"] }
 
 [dependencies]
 anyhow = "1.0.100"
+chat-logger = { version = "0.1.0", path = "plugins/chat-logger" }
 daily-greeting = { version = "0.1.0", path = "plugins/daily-greeting" }
 deploy = { version = "0.1.0", path = "plugins/deploy" }
 feedback = { version = "0.1.0", path = "plugins/feedback" }
@@ -16,7 +17,7 @@ kovi = "0.12.7"
 kovi-plugin-cmd = "0.3.0"
 
 [workspace]
-members = ["plugins/feedback", "plugins/daily-greeting", "plugins/deploy", "plugins/relay", "libs/data-client"]
+members = ["plugins/feedback", "plugins/daily-greeting", "plugins/deploy", "plugins/relay", "plugins/chat-logger", "libs/data-client"]
 
 [workspace.dependencies]
 kovi = "0.12.7"

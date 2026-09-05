@@ -13,11 +13,12 @@ qq_bot/
 ├── src/main.rs             # 入口文件
 ├── config.toml             # 配置文件
 ├── config.example.toml     # 配置示例
-├── init.sql                # feedback 插件数据库初始化脚本
+├── init.sql                # 共享数据库 local.db 初始化脚本
 ├── kovi.plugin.toml        # Kovi 插件启用配置
 ├── plugins/                # 插件目录
 │   ├── feedback/           # 反馈处理插件
 │   ├── relay/              # 队列消息转发插件
+│   ├── chat-logger/        # 群聊天记录收集插件
 │   └── deploy/             # 滚动部署插件
 └── Dockerfile
 ```
@@ -26,16 +27,19 @@ qq_bot/
 
    复制 `config.example.toml` 为 `config.toml`，按需填写各插件配置。
 
-2. 初始化数据库（用于 feedback 插件）
+2. 初始化数据库（可选）
+
+   项目启动时会自动创建 `local.db` 并执行 `init.sql` 初始化表结构，通常无需手动操作。
+   如需提前初始化，可执行：
 
    ```bash
-   sqlite3 feedback.db < init.sql
+   sqlite3 local.db < init.sql
    ```
 
    或者使用 SQLite 命令行工具：
 
    ```bash
-   sqlite3 feedback.db
+   sqlite3 local.db
    sqlite> .read init.sql
    ```
 
@@ -49,6 +53,7 @@ qq_bot/
 | deploy | 通过 QQ 指令触发 Docker 蓝绿滚动发布 | [plugins/deploy/README.md](plugins/deploy/README.md) |
 | daily-greeting | 定时发送早中晚问候消息，上下线通知 | [plugins/daily-greeting/README.md](plugins/daily-greeting/README.md) |
 | relay | 从 RabbitMQ 队列接收纯文本消息并原样转发到 QQ 群 | [plugins/relay/README.md](plugins/relay/README.md) |
+| chat-logger | 收集指定群的聊天记录（含图片）到 local.db | [plugins/chat-logger/README.md](plugins/chat-logger/README.md) |
 
 ## 指令总览
 
@@ -77,3 +82,11 @@ qq_bot/
 | 指令 | 用法 | 说明 |
 | ---- | ---- | ---- |
 | 部署 | `部署` | 检查镜像更新并执行滚动发布（仅管理员） |
+
+**chat-logger 插件**（仅管理员）
+
+| 指令 | 用法 | 说明 |
+| ---- | ---- | ---- |
+| 监听 | `监听 <群号>` | 将群号加入监听列表，开始收集该群聊天记录 |
+| 取消监听 | `取消监听 <群号>` | 将群号从监听列表移除 |
+| 统计监听 | `统计监听` | 查看所有被监听群及其已收集的记录数量 |
