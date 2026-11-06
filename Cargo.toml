@@ -13,11 +13,12 @@ daily-greeting = { version = "0.1.0", path = "plugins/daily-greeting" }
 deploy = { version = "0.1.0", path = "plugins/deploy" }
 feedback = { version = "0.1.0", path = "plugins/feedback" }
 relay = { version = "0.1.0", path = "plugins/relay" }
+welcome = { version = "0.1.0", path = "plugins/welcome" }
 kovi = "0.12.7"
 kovi-plugin-cmd = "0.3.0"
 
 [workspace]
-members = ["plugins/feedback", "plugins/daily-greeting", "plugins/deploy", "plugins/relay", "plugins/chat-logger", "libs/data-client"]
+members = ["plugins/feedback", "plugins/daily-greeting", "plugins/deploy", "plugins/relay", "plugins/chat-logger", "plugins/welcome", "libs/data-client"]
 
 [workspace.dependencies]
 kovi = "0.12.7"

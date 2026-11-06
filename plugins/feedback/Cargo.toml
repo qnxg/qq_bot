@@ -8,7 +8,7 @@ openssl = { version = "0.10", features = ["vendored"] }
 
 [dependencies]
 anyhow = "1.0.100"
-async-trait = "0.1.89"
+async-trait = "0.1.92"
 data-client = { version = "0.1.0", path = "../../libs/data-client" }
 kovi.workspace = true
 lapin = { version = "3.7.0", features = ["rustls"] }

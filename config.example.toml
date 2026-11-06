@@ -83,3 +83,10 @@ container_port = 8080
 name = "weihuda_backend_b"
 host_port = 8082
 container_port = 8080
+
+# welcome 插件配置 ----------------------------------
+[welcome]
+# 启用入群欢迎的群号列表，空列表表示不启用
+group_ids = []
+# 欢迎文本，{at} 会替换为 @新成员；未填写时使用默认文本
+# text = "{at} 欢迎来到湖大反考研/反保研/反本科搞科研/反升学/反计拔群"
