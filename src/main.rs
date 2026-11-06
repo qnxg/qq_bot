@@ -7,7 +7,8 @@ fn main() {
         daily_greeting,
         deploy,
         relay,
-        chat_logger
+        chat_logger,
+        welcome
     );
     bot.run();
 }

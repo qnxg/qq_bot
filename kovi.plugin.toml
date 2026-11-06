@@ -51,3 +51,12 @@ list_mode = "WhiteList"
 [chat_logger.access_list]
 friends = []
 groups = []
+
+[welcome]
+enable_on_startup = true
+access_control = false
+list_mode = "WhiteList"
+
+[welcome.access_list]
+friends = []
+groups = []

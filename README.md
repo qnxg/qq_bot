@@ -19,7 +19,9 @@ qq_bot/
 │   ├── feedback/           # 反馈处理插件
 │   ├── relay/              # 队列消息转发插件
 │   ├── chat-logger/        # 群聊天记录收集插件
-│   └── deploy/             # 滚动部署插件
+│   ├── deploy/             # 滚动部署插件
+│   ├── daily-greeting/     # 定时问候插件
+│   └── welcome/            # 入群自动欢迎插件
 └── Dockerfile
 ```
 
@@ -54,6 +56,7 @@ qq_bot/
 | daily-greeting | 定时发送早中晚问候消息，上下线通知 | [plugins/daily-greeting/README.md](plugins/daily-greeting/README.md) |
 | relay | 从 RabbitMQ 队列接收纯文本消息并原样转发到 QQ 群 | [plugins/relay/README.md](plugins/relay/README.md) |
 | chat-logger | 收集指定群的聊天记录（含图片）到 local.db | [plugins/chat-logger/README.md](plugins/chat-logger/README.md) |
+| welcome | 新成员入群时自动 @ 并发送欢迎消息 | [plugins/welcome/README.md](plugins/welcome/README.md) |
 
 ## 指令总览
 
